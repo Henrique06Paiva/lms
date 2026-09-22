@@ -5,3 +5,5 @@ data/*.sqlite-wal
 data/*.sqlite-shm
 uploads/
 .env
+caddy_data/
+caddy_config/
