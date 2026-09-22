@@ -19,7 +19,6 @@ interface InternalRoute {
 function pathToRegex(pattern: string): { regex: RegExp; paramNames: string[] } {
   const paramNames: string[] = [];
 
-  // Substitui parâmetros no formato :id ou :slug por grupos de captura ([^/]+)
   const regexString = pattern
     .replace(/\//g, "\\/")
     .replace(/:([a-zA-Z0-9_]+)/g, (_, name) => {
@@ -27,7 +26,6 @@ function pathToRegex(pattern: string): { regex: RegExp; paramNames: string[] } {
       return "([^/]+)";
     });
 
-  // Aceita barra opcional no final
   const regex = new RegExp(`^${regexString}(?:\\/)?$`);
   return { regex, paramNames };
 }
@@ -66,22 +64,37 @@ export class Router {
     return this;
   }
 
+  public get(pattern: string, handler: RouteHandler): this;
+  public get(pattern: string, m1: Middleware, handler: RouteHandler): this;
+  public get(pattern: string, m1: Middleware, m2: Middleware, handler: RouteHandler): this;
   public get(pattern: string, ...handlers: (Middleware | RouteHandler)[]): this {
     return this.register("GET", pattern, handlers);
   }
 
+  public post(pattern: string, handler: RouteHandler): this;
+  public post(pattern: string, m1: Middleware, handler: RouteHandler): this;
+  public post(pattern: string, m1: Middleware, m2: Middleware, handler: RouteHandler): this;
   public post(pattern: string, ...handlers: (Middleware | RouteHandler)[]): this {
     return this.register("POST", pattern, handlers);
   }
 
+  public put(pattern: string, handler: RouteHandler): this;
+  public put(pattern: string, m1: Middleware, handler: RouteHandler): this;
+  public put(pattern: string, m1: Middleware, m2: Middleware, handler: RouteHandler): this;
   public put(pattern: string, ...handlers: (Middleware | RouteHandler)[]): this {
     return this.register("PUT", pattern, handlers);
   }
 
+  public patch(pattern: string, handler: RouteHandler): this;
+  public patch(pattern: string, m1: Middleware, handler: RouteHandler): this;
+  public patch(pattern: string, m1: Middleware, m2: Middleware, handler: RouteHandler): this;
   public patch(pattern: string, ...handlers: (Middleware | RouteHandler)[]): this {
     return this.register("PATCH", pattern, handlers);
   }
 
+  public delete(pattern: string, handler: RouteHandler): this;
+  public delete(pattern: string, m1: Middleware, handler: RouteHandler): this;
+  public delete(pattern: string, m1: Middleware, m2: Middleware, handler: RouteHandler): this;
   public delete(pattern: string, ...handlers: (Middleware | RouteHandler)[]): this {
     return this.register("DELETE", pattern, handlers);
   }
@@ -96,7 +109,6 @@ export class Router {
       const match = route.regex.exec(pathname);
       if (!match) continue;
 
-      // Extrai os parâmetros dinâmicos (ex: /api/courses/:slug)
       req.params = {};
       route.paramNames.forEach((name, index) => {
         const val = match[index + 1];
@@ -105,7 +117,6 @@ export class Router {
         }
       });
 
-      // Constrói a esteira de execução: [globais, middlewares da rota, handler final]
       const pipeline: (Middleware | RouteHandler)[] = [
         ...this.globalMiddlewares,
         ...route.middlewares,
