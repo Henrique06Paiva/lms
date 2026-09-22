@@ -1,9 +1,17 @@
 import Database from "better-sqlite3";
+import fs from "node:fs";
 import path from "node:path";
 
 const DB_PATH = path.resolve(process.cwd(), "data", "educore.sqlite");
+const dbDir = path.dirname(DB_PATH);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
-export const db = new Database(DB_PATH, { verbose: console.log });
+const isProd = process.env.NODE_ENV === "production";
+export const db = new Database(DB_PATH, {
+  verbose: isProd ? undefined : console.log,
+});
 
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");

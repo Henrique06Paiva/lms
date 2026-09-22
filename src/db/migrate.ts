@@ -103,9 +103,12 @@ export function runMigrations(): void {
   );
 }
 
-// Executa o runner
-try {
-  runMigrations();
-} catch (err) {
-  process.exit(1);
+// Executa o runner se chamado diretamente via CLI
+const isDirectExecution = process.argv[1]?.replace(/\\/g, "/").endsWith("migrate.ts") || process.argv[1]?.replace(/\\/g, "/").endsWith("migrate.js");
+if (isDirectExecution) {
+  try {
+    runMigrations();
+  } catch (err) {
+    process.exit(1);
+  }
 }

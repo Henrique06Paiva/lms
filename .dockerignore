@@ -1,0 +1,9 @@
+node_modules
+dist
+data/*.sqlite*
+uploads/videos/*
+uploads/materials/*
+uploads/certificates/*
+.git
+.gemini
+*.log
