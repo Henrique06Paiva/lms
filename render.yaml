@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: educore-lms
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: main
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: HOST
+        value: 0.0.0.0

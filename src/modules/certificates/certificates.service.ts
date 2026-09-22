@@ -96,7 +96,10 @@ export class CertificatesService {
   }): Promise<void> {
     const workerTsPath = path.resolve(process.cwd(), "src", "modules", "certificates", "pdf_worker.ts");
     const workerJsPath = path.resolve(process.cwd(), "dist", "modules", "certificates", "pdf_worker.js");
-    const workerPath = fs.existsSync(workerTsPath) ? workerTsPath : workerJsPath;
+    const isCompiled = process.argv[1]?.includes("dist") || import.meta.url.includes("/dist/");
+    const workerPath = isCompiled && fs.existsSync(workerJsPath)
+      ? workerJsPath
+      : (fs.existsSync(workerTsPath) ? workerTsPath : workerJsPath);
 
     const args = [
       `--student=${params.studentName}`,

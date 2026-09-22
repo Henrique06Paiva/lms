@@ -4,7 +4,7 @@ import { db } from "./connection.js";
 import { runMigrations } from "./migrate.js";
 import { generateSalt, hashPassword } from "../modules/auth/auth.crypto.js";
 
-async function seed() {
+export async function seed() {
   console.log("🌱 [Seed] Iniciando povoamento corporativo do banco de dados...");
 
   // Garante que migrations estão em dia
@@ -189,7 +189,10 @@ async function seed() {
   console.log("--------------------------------------------------");
 }
 
-seed().catch((err) => {
-  console.error("❌ Falha no seed:", err);
-  process.exit(1);
-});
+const isDirectExecution = process.argv[1]?.replace(/\\/g, "/").endsWith("seed.ts") || process.argv[1]?.replace(/\\/g, "/").endsWith("seed.js");
+if (isDirectExecution) {
+  seed().catch((err) => {
+    console.error("❌ Falha no seed:", err);
+    process.exit(1);
+  });
+}
