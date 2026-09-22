@@ -49,17 +49,28 @@ async function init() {
   state.player = new CustomVideoPlayer(document.getElementById("player-container"));
 
   setupNavigation();
+  setupAuthScreenControls();
   setupCatalogControls();
   setupClassroomControls();
   setupForms();
 
   await checkAuth();
-  await loadCourses();
+
+  if (state.user) {
+    updateAuthLayout();
+    switchView("courses");
+    await loadCourses();
+  } else {
+    updateAuthLayout();
+    switchView("auth");
+  }
 }
 
 function injectStaticIcons() {
   const map = {
     "brand-logo-icon": icons.logo,
+    "auth-brand-logo": icons.logo,
+    "demo-info-icon": icons.info,
     "search-icon-container": icons.search,
     "nav-icon-courses": icons.book,
     "nav-icon-my-courses": icons.layers,
@@ -98,7 +109,21 @@ async function checkAuth() {
   }
   renderNavActions();
   updateAdminUI();
+  updateAuthLayout();
   updateKPIs();
+}
+
+function updateAuthLayout() {
+  const sidebar = document.getElementById("app-sidebar");
+  const search = document.getElementById("global-search-container");
+  const isAuthenticated = !!state.user;
+
+  if (sidebar) {
+    sidebar.style.display = isAuthenticated ? "flex" : "none";
+  }
+  if (search) {
+    search.style.display = isAuthenticated ? "flex" : "none";
+  }
 }
 
 function getInitials(name) {
@@ -138,16 +163,12 @@ function renderNavActions() {
     document.getElementById("btn-logout")?.addEventListener("click", handleLogout);
   } else {
     container.innerHTML = `
-      <button class="btn btn-secondary" id="btn-open-login" style="padding: 0.45rem 0.85rem;">
+      <button class="btn btn-primary" id="btn-nav-go-login" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
         Acessar Conta
-      </button>
-      <button class="btn btn-primary" id="btn-open-register" style="padding: 0.45rem 0.85rem;">
-        Cadastre-se
       </button>
     `;
 
-    document.getElementById("btn-open-login")?.addEventListener("click", () => openModal("modal-login"));
-    document.getElementById("btn-open-register")?.addEventListener("click", () => openModal("modal-register"));
+    document.getElementById("btn-nav-go-login")?.addEventListener("click", () => switchView("auth"));
   }
 }
 
@@ -164,10 +185,12 @@ async function handleLogout() {
   try {
     await api.auth.logout();
     state.user = null;
+    state.courses = [];
     showToast("Sessão encerrada com sucesso.", "info");
     renderNavActions();
     updateAdminUI();
-    await loadCourses();
+    updateAuthLayout();
+    switchView("auth");
     updateKPIs();
   } catch (err) {
     showToast(err.message, "error");
@@ -206,9 +229,20 @@ function updateKPIs() {
 // ==============================================================================
 
 function switchView(viewName) {
-  document.getElementById("view-courses").style.display = viewName === "courses" ? "flex" : "none";
-  document.getElementById("view-classroom").style.display = viewName === "classroom" ? "flex" : "none";
-  document.getElementById("view-verify-cert").style.display = viewName === "verify-cert" ? "flex" : "none";
+  // Gating corporativo: se não autenticado e tentar acessar áreas privadas, força tela de login
+  if (!state.user && viewName !== "verify-cert") {
+    viewName = "auth";
+  }
+
+  const authView = document.getElementById("view-auth");
+  const coursesView = document.getElementById("view-courses");
+  const classroomView = document.getElementById("view-classroom");
+  const verifyView = document.getElementById("view-verify-cert");
+
+  if (authView) authView.style.display = viewName === "auth" ? "block" : "none";
+  if (coursesView) coursesView.style.display = viewName === "courses" ? "flex" : "none";
+  if (classroomView) classroomView.style.display = viewName === "classroom" ? "flex" : "none";
+  if (verifyView) verifyView.style.display = viewName === "verify-cert" ? "block" : "none";
 
   document.querySelectorAll(".sidebar-nav-item").forEach((el) => el.classList.remove("active"));
   if (viewName === "courses" && state.activeFilter === "all") {
@@ -218,17 +252,27 @@ function switchView(viewName) {
   } else if (viewName === "verify-cert") {
     document.getElementById("nav-verify-cert")?.classList.add("active");
   }
+
+  updateAuthLayout();
 }
 
 function setupNavigation() {
   document.getElementById("nav-brand-home")?.addEventListener("click", async () => {
-    state.activeFilter = "all";
-    updateCatalogFilterButtons();
-    switchView("courses");
-    await loadCourses();
+    if (state.user) {
+      state.activeFilter = "all";
+      updateCatalogFilterButtons();
+      switchView("courses");
+      await loadCourses();
+    } else {
+      switchView("auth");
+    }
   });
 
   document.getElementById("nav-courses")?.addEventListener("click", async () => {
+    if (!state.user) {
+      switchView("auth");
+      return;
+    }
     state.activeFilter = "all";
     updateCatalogFilterButtons();
     switchView("courses");
@@ -237,8 +281,8 @@ function setupNavigation() {
 
   document.getElementById("nav-my-courses")?.addEventListener("click", async () => {
     if (!state.user) {
-      showToast("Faça login para acessar seus cursos inscritos", "warning");
-      openModal("modal-login");
+      showToast("Faça login com sua conta para acessar seus cursos", "warning");
+      switchView("auth");
       return;
     }
     state.activeFilter = "my-courses";
@@ -262,7 +306,107 @@ function setupNavigation() {
 }
 
 // ==============================================================================
-// 4. Catálogo & Dashboard de Cursos
+// 4. Tela Dedicada de Autenticação Corporativa (view-auth)
+// ==============================================================================
+
+function setupAuthScreenControls() {
+  const tabLogin = document.getElementById("auth-tab-login");
+  const tabRegister = document.getElementById("auth-tab-register");
+  const formLogin = document.getElementById("form-auth-login");
+  const formRegister = document.getElementById("form-auth-register");
+
+  tabLogin?.addEventListener("click", () => {
+    tabLogin.classList.add("active");
+    tabRegister?.classList.remove("active");
+    if (formLogin) formLogin.style.display = "flex";
+    if (formRegister) formRegister.style.display = "none";
+  });
+
+  tabRegister?.addEventListener("click", () => {
+    tabRegister.classList.add("active");
+    tabLogin?.classList.remove("active");
+    if (formRegister) formRegister.style.display = "flex";
+    if (formLogin) formLogin.style.display = "none";
+  });
+
+  // Botões de Demonstração Rápida
+  document.getElementById("btn-fill-admin")?.addEventListener("click", () => {
+    tabLogin?.click();
+    const emailInput = document.getElementById("auth-login-email");
+    const passInput = document.getElementById("auth-login-password");
+    if (emailInput) emailInput.value = "admin@educore.com";
+    if (passInput) passInput.value = "adminPassword123";
+    showToast("Credenciais de Administrador preenchidas!", "info");
+  });
+
+  document.getElementById("btn-fill-student")?.addEventListener("click", () => {
+    tabLogin?.click();
+    const emailInput = document.getElementById("auth-login-email");
+    const passInput = document.getElementById("auth-login-password");
+    if (emailInput) emailInput.value = "aluno@empresa.com";
+    if (passInput) passInput.value = "alunoPassword123";
+    showToast("Credenciais de Aluno preenchidas!", "info");
+  });
+
+  // Link para validador público de certificados
+  document.getElementById("btn-auth-to-verify")?.addEventListener("click", () => {
+    switchView("verify-cert");
+  });
+
+  // Botão de retorno do validador público
+  document.getElementById("btn-back-from-verify")?.addEventListener("click", () => {
+    if (state.user) {
+      switchView("courses");
+    } else {
+      switchView("auth");
+    }
+  });
+
+  // Submissão do login dedicado
+  formLogin?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("auth-login-email")?.value;
+    const password = document.getElementById("auth-login-password")?.value;
+
+    try {
+      const data = await api.auth.login({ email, password });
+      state.user = data.user;
+      showToast(`Bem-vindo(a) ao EduCore, ${data.user.name}!`, "success");
+      renderNavActions();
+      updateAdminUI();
+      updateAuthLayout();
+      switchView("courses");
+      await loadCourses();
+      updateKPIs();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  // Submissão do cadastro dedicado
+  formRegister?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("auth-reg-name")?.value;
+    const email = document.getElementById("auth-reg-email")?.value;
+    const password = document.getElementById("auth-reg-password")?.value;
+    const role = document.getElementById("auth-reg-role")?.value;
+
+    try {
+      await api.auth.register({ name, email, password, role });
+      showToast("Cadastro realizado com sucesso! Faça login para continuar.", "success");
+      tabLogin?.click();
+      const loginEmail = document.getElementById("auth-login-email");
+      const loginPass = document.getElementById("auth-login-password");
+      if (loginEmail) loginEmail.value = email;
+      if (loginPass) loginPass.value = password;
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+}
+
+// ==============================================================================
+// 5. Catálogo & Dashboard de Cursos
 // ==============================================================================
 
 function setupCatalogControls() {
@@ -434,7 +578,7 @@ function renderCoursesGrid() {
 async function handleOpenCourse(slug) {
   if (!state.user) {
     showToast("Faça login com sua conta para acessar esta capacitação", "warning");
-    openModal("modal-login");
+    switchView("auth");
     return;
   }
 
@@ -461,7 +605,7 @@ async function handleOpenCourse(slug) {
 }
 
 // ==============================================================================
-// 5. Sala de Aula & Player Customizado
+// 6. Sala de Aula & Player Customizado
 // ==============================================================================
 
 function setupClassroomControls() {
@@ -844,11 +988,11 @@ function updateCertificateStatus() {
 }
 
 // ==============================================================================
-// 6. Formulários de Modais (Login, Cadastro, Criação de Curso)
+// 7. Formulários de Modais (Criação de Curso pelo Admin)
 // ==============================================================================
 
 function setupForms() {
-  // Login
+  // Modal de Login secundário
   document.getElementById("form-login")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value;
@@ -861,6 +1005,8 @@ function setupForms() {
       closeModal("modal-login");
       renderNavActions();
       updateAdminUI();
+      updateAuthLayout();
+      switchView("courses");
       await loadCourses();
       updateKPIs();
     } catch (err) {
@@ -868,7 +1014,7 @@ function setupForms() {
     }
   });
 
-  // Cadastro
+  // Modal de Cadastro secundário
   document.getElementById("form-register")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("reg-name").value;
@@ -878,7 +1024,7 @@ function setupForms() {
 
     try {
       await api.auth.register({ name, email, password, role });
-      showToast("Cadastro realizado com sucesso! Efetue login para continuar.", "success");
+      showToast("Cadastro realizado com sucesso! Faça login para continuar.", "success");
       closeModal("modal-register");
       openModal("modal-login");
     } catch (err) {

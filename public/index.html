@@ -18,7 +18,7 @@
           <span class="brand-badge">Enterprise LMS</span>
         </div>
       </div>
-      <div class="nav-search">
+      <div class="nav-search" id="global-search-container">
         <span id="search-icon-container"></span>
         <input type="text" id="global-search-input" placeholder="Buscar cursos, tópicos ou competências...">
       </div>
@@ -34,7 +34,7 @@
   <div class="app-container">
     
     <!-- Sidebar de Navegação Corporativa -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="app-sidebar">
       <div class="sidebar-section-title">Aprendizado</div>
       <nav class="sidebar-nav">
         <a class="sidebar-nav-item active" id="nav-courses">
@@ -67,6 +67,90 @@
     <!-- Área de Conteúdo Dinâmico -->
     <main class="main-content">
       
+      <!-- Visão 0: Autenticação Corporativa (Tela Dedicada de Login/Cadastro) -->
+      <section id="view-auth" style="display: none;">
+        <div class="auth-wrapper">
+          <div class="auth-card">
+            
+            <div class="auth-header">
+              <div class="auth-brand-logo" id="auth-brand-logo"></div>
+              <h2>Portal Corporativo EduCore</h2>
+              <p>Acesse seu ambiente corporativo de capacitação, trilhas de conhecimento e conformidade.</p>
+            </div>
+
+            <!-- Alternador de Ação (Login vs Cadastro) -->
+            <div class="auth-nav-tabs">
+              <button class="auth-tab-btn active" id="auth-tab-login">Acessar Conta</button>
+              <button class="auth-tab-btn" id="auth-tab-register">Cadastre-se</button>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form id="form-auth-login" class="auth-form">
+              <div class="form-group">
+                <label class="form-label">E-mail Corporativo</label>
+                <input type="email" id="auth-login-email" class="form-input" placeholder="seu.nome@empresa.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Senha</label>
+                <input type="password" id="auth-login-password" class="form-input" placeholder="••••••••" required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+                Entrar no Sistema
+              </button>
+            </form>
+
+            <!-- Formulário de Cadastro -->
+            <form id="form-auth-register" class="auth-form" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" id="auth-reg-name" class="form-input" placeholder="Ex: Ana Silva" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">E-mail Corporativo</label>
+                <input type="email" id="auth-reg-email" class="form-input" placeholder="ana.silva@empresa.com" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Senha de Acesso (mínimo 6 caracteres)</label>
+                <input type="password" id="auth-reg-password" class="form-input" placeholder="••••••••" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Perfil de Acesso</label>
+                <select id="auth-reg-role" class="form-input">
+                  <option value="student">Colaborador / Aluno</option>
+                  <option value="admin">Gestor / Instrutor (Admin)</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%; padding: 0.75rem; font-size: 0.95rem;">
+                Criar Minha Conta
+              </button>
+            </form>
+
+            <!-- Preenchimento Rápido com Dados de Demonstração -->
+            <div class="demo-credentials-box">
+              <div class="demo-title">
+                <span id="demo-info-icon"></span>
+                <span>Acesso Rápido de Teste:</span>
+              </div>
+              <div class="demo-buttons">
+                <button type="button" class="btn-demo-pill" id="btn-fill-admin" title="Preencher com Administrador">
+                  👑 Administrador
+                </button>
+                <button type="button" class="btn-demo-pill" id="btn-fill-student" title="Preencher com Aluno">
+                  🎓 Aluno de Teste
+                </button>
+              </div>
+            </div>
+
+            <!-- Link para Validação Pública de Certificados -->
+            <div class="auth-footer-link">
+              <span>Precisa apenas verificar a autenticidade de um certificado?</span>
+              <a id="btn-auth-to-verify">Acessar Validador Público de Certificados ›</a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       <!-- Visão 1: Catálogo de Cursos & Dashboard de Aprendizado -->
       <section id="view-courses" style="display: flex; flex-direction: column; gap: 2rem;">
         
@@ -258,6 +342,9 @@
       <!-- Visão 3: Validador Público de Certificados (Layout Oficial) -->
       <section id="view-verify-cert" style="display: none;">
         <div class="verify-cert-container">
+          <button class="btn btn-secondary" id="btn-back-from-verify" style="align-self: flex-start; margin-bottom: 0.5rem;">
+            ← Voltar
+          </button>
           <div class="verify-header-box">
             <div class="verify-seal-icon" id="seal-icon-box"></div>
             <h1>Portal Oficial de Autenticidade</h1>
