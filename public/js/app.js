@@ -7,7 +7,6 @@ import { CustomVideoPlayer } from "./player.js";
 const state = {
   user: null,
   courses: [],
-  filteredCourses: [],
   currentCourse: null,
   currentLessons: [],
   activeLesson: null,
@@ -17,6 +16,26 @@ const state = {
   searchQuery: "",
   activeClassroomTab: "overview",
 };
+
+export function isCourseCompleted(courseOrEnrollment) {
+  if (!courseOrEnrollment) return false;
+  if (courseOrEnrollment.enrollment_id === null && courseOrEnrollment.course_id === undefined) return false;
+  if (courseOrEnrollment.completed_at !== null && courseOrEnrollment.completed_at !== undefined) return true;
+  const percent = courseOrEnrollment.progress_percent !== null && courseOrEnrollment.progress_percent !== undefined
+    ? Math.round(courseOrEnrollment.progress_percent)
+    : 0;
+  return percent >= 100;
+}
+
+function syncCourseProgress(courseId, enrollment) {
+  if (!enrollment) return;
+  const course = state.courses.find((c) => c.id === courseId);
+  if (course) {
+    course.enrollment_id = enrollment.id ?? course.enrollment_id;
+    course.progress_percent = enrollment.progress_percent;
+    course.completed_at = enrollment.completed_at;
+  }
+}
 
 // ==============================================================================
 // 1. Inicialização
@@ -167,9 +186,9 @@ function updateKPIs() {
     return;
   }
 
-  const enrolled = state.courses.filter((c) => c.enrollment_id !== null);
+  const enrolled = state.courses.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined);
   const enrolledCount = enrolled.length;
-  const completed = enrolled.filter((c) => (c.progress_percent || 0) >= 100);
+  const completed = enrolled.filter((c) => isCourseCompleted(c));
 
   let totalPercent = 0;
   enrolled.forEach((c) => {
@@ -194,7 +213,7 @@ function switchView(viewName) {
   document.querySelectorAll(".sidebar-nav-item").forEach((el) => el.classList.remove("active"));
   if (viewName === "courses" && state.activeFilter === "all") {
     document.getElementById("nav-courses")?.classList.add("active");
-  } else if (viewName === "courses" && state.activeFilter === "enrolled") {
+  } else if (viewName === "courses" && state.activeFilter === "my-courses") {
     document.getElementById("nav-my-courses")?.classList.add("active");
   } else if (viewName === "verify-cert") {
     document.getElementById("nav-verify-cert")?.classList.add("active");
@@ -202,38 +221,39 @@ function switchView(viewName) {
 }
 
 function setupNavigation() {
-  document.getElementById("nav-brand-home")?.addEventListener("click", () => {
+  document.getElementById("nav-brand-home")?.addEventListener("click", async () => {
     state.activeFilter = "all";
     updateCatalogFilterButtons();
     switchView("courses");
-    renderCoursesGrid();
+    await loadCourses();
   });
 
-  document.getElementById("nav-courses")?.addEventListener("click", () => {
+  document.getElementById("nav-courses")?.addEventListener("click", async () => {
     state.activeFilter = "all";
     updateCatalogFilterButtons();
     switchView("courses");
-    renderCoursesGrid();
+    await loadCourses();
   });
 
-  document.getElementById("nav-my-courses")?.addEventListener("click", () => {
+  document.getElementById("nav-my-courses")?.addEventListener("click", async () => {
     if (!state.user) {
       showToast("Faça login para acessar seus cursos inscritos", "warning");
       openModal("modal-login");
       return;
     }
-    state.activeFilter = "enrolled";
+    state.activeFilter = "my-courses";
     updateCatalogFilterButtons();
     switchView("courses");
-    renderCoursesGrid();
+    await loadCourses();
   });
 
   document.getElementById("nav-verify-cert")?.addEventListener("click", () => {
     switchView("verify-cert");
   });
 
-  document.getElementById("btn-back-to-courses")?.addEventListener("click", () => {
+  document.getElementById("btn-back-to-courses")?.addEventListener("click", async () => {
     switchView("courses");
+    await loadCourses();
   });
 
   document.getElementById("btn-open-create-course")?.addEventListener("click", () => {
@@ -255,7 +275,7 @@ function setupCatalogControls() {
     });
   }
 
-  // Filtros de status (Todos, Em Andamento, Concluídos)
+  // Filtros de status (Todos os Cursos, Meus Cursos, Em Andamento, Concluídos)
   document.querySelectorAll(".catalog-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       state.activeFilter = tab.getAttribute("data-filter") || "all";
@@ -277,14 +297,14 @@ function updateCatalogFilterButtons() {
   document.querySelectorAll(".sidebar-nav-item").forEach((el) => el.classList.remove("active"));
   if (state.activeFilter === "all") {
     document.getElementById("nav-courses")?.classList.add("active");
-  } else if (state.activeFilter === "enrolled") {
+  } else if (state.activeFilter === "my-courses") {
     document.getElementById("nav-my-courses")?.classList.add("active");
   }
 }
 
 async function loadCourses() {
   const grid = document.getElementById("course-grid");
-  if (grid) {
+  if (grid && state.courses.length === 0) {
     grid.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem 0;">Carregando trilhas de capacitação...</p>`;
   }
 
@@ -306,11 +326,13 @@ function renderCoursesGrid() {
 
   let list = [...state.courses];
 
-  // Filtro por tab
-  if (state.activeFilter === "enrolled") {
-    list = list.filter((c) => c.enrollment_id !== null && (c.progress_percent || 0) < 100);
+  // Filtros avançados
+  if (state.activeFilter === "my-courses") {
+    list = list.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined);
+  } else if (state.activeFilter === "in-progress") {
+    list = list.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined && !isCourseCompleted(c));
   } else if (state.activeFilter === "completed") {
-    list = list.filter((c) => c.enrollment_id !== null && (c.progress_percent || 0) >= 100);
+    list = list.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined && isCourseCompleted(c));
   }
 
   // Filtro por busca
@@ -328,7 +350,7 @@ function renderCoursesGrid() {
         <span style="color: var(--text-muted);">${icons.book}</span>
         <h3 style="font-size: 1.1rem; color: var(--text-primary); font-weight: 600;">Nenhum curso encontrado</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px;">
-          Não há cursos cadastrados correspondentes ao filtro ou termo pesquisado no momento.
+          Não há cursos correspondentes à categoria ou termo selecionado.
         </p>
       </div>
     `;
@@ -344,16 +366,20 @@ function renderCoursesGrid() {
 
   grid.innerHTML = list
     .map((c, idx) => {
-      const isEnrolled = c.enrollment_id !== null;
-      const percent = c.progress_percent !== null ? Math.round(c.progress_percent) : 0;
-      const isCompleted = percent >= 100;
+      const isEnrolled = c.enrollment_id !== null && c.enrollment_id !== undefined;
+      const isCompleted = isCourseCompleted(c);
+      const percent = c.progress_percent !== null && c.progress_percent !== undefined
+        ? Math.round(c.progress_percent)
+        : 0;
       const pal = categoryPalettes[idx % categoryPalettes.length];
 
       let statusBadge = "";
       if (isCompleted) {
-        statusBadge = `<span class="card-status-badge completed">Concluído</span>`;
+        statusBadge = `<span class="card-status-badge completed">${icons.check} Concluído</span>`;
       } else if (isEnrolled) {
         statusBadge = `<span class="card-status-badge enrolled">Em Andamento</span>`;
+      } else {
+        statusBadge = `<span class="card-status-badge available">Disponível</span>`;
       }
 
       return `
@@ -387,8 +413,8 @@ function renderCoursesGrid() {
                 <span class="card-meta-item">${icons.clock} ${c.workload_hours}h</span>
                 <span class="card-meta-item">${icons.layers} ${c.total_lessons || 0} aulas</span>
               </div>
-              <button class="btn ${isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">
-                ${isEnrolled ? "Acessar Curso" : "Matricular-se"}
+              <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">
+                ${isCompleted ? `${icons.award} Ver Certificado` : isEnrolled ? "Continuar" : "Matricular-se"}
               </button>
             </div>
           </div>
@@ -421,8 +447,11 @@ async function handleOpenCourse(slug) {
     if (!state.currentEnrollment) {
       const enrollRes = await api.courses.enroll(data.course.id);
       state.currentEnrollment = enrollRes.enrollment;
+      syncCourseProgress(data.course.id, enrollRes.enrollment);
       showToast("Matrícula realizada com sucesso!", "success");
       await loadCourses();
+    } else {
+      syncCourseProgress(data.course.id, data.enrollment);
     }
 
     openClassroom();
@@ -452,9 +481,19 @@ function setupClassroomControls() {
       state.currentEnrollment = res.enrollment;
       state.activeLesson.is_completed = 1;
 
-      showToast(`Aula marcada como concluída!`, "success");
+      // Sincroniza imediatamente o curso na lista em memória
+      syncCourseProgress(state.currentCourse.id, res.enrollment);
+
+      const isCompleted = isCourseCompleted(res.enrollment);
+      if (isCompleted) {
+        showToast("🎉 Parabéns! Você concluiu todas as aulas desta capacitação!", "success");
+      } else {
+        showToast(`Aula marcada como concluída!`, "success");
+      }
+
       renderClassroomCurriculum();
       updateClassroomProgress();
+      updateClassroomCourseBadge();
       updateNextLessonButton();
       updateCertificateStatus();
       updateKPIs();
@@ -482,9 +521,13 @@ function setupClassroomControls() {
       state.currentEnrollment = res.enrollment;
       state.currentLessons.forEach((l) => (l.is_completed = 0));
 
+      // Sincroniza reset no curso na lista em memória
+      syncCourseProgress(state.currentCourse.id, res.enrollment);
+
       showToast("Progresso reiniciado para 0%", "info");
       renderClassroomCurriculum();
       updateClassroomProgress();
+      updateClassroomCourseBadge();
       updateNextLessonButton();
       updateCertificateStatus();
       updateKPIs();
@@ -603,6 +646,7 @@ function openClassroom() {
 
   renderClassroomCurriculum();
   updateClassroomProgress();
+  updateClassroomCourseBadge();
 
   const firstIncomplete = state.currentLessons.find((l) => !l.is_completed) || state.currentLessons[0];
   if (firstIncomplete) {
@@ -614,8 +658,34 @@ function openClassroom() {
   updateCertificateStatus();
 }
 
+function updateClassroomCourseBadge() {
+  const container = document.getElementById("classroom-course-badge-container");
+  if (!container) return;
+
+  const isCompleted = isCourseCompleted(state.currentEnrollment);
+  if (isCompleted) {
+    container.innerHTML = `
+      <span class="classroom-header-badge completed">
+        ${icons.checkCircle}
+        <span>Curso 100% Concluído</span>
+      </span>
+    `;
+  } else if (state.currentEnrollment) {
+    const percent = Math.round(state.currentEnrollment.progress_percent || 0);
+    container.innerHTML = `
+      <span class="classroom-header-badge in-progress">
+        <span>Em Andamento (${percent}%)</span>
+      </span>
+    `;
+  } else {
+    container.innerHTML = "";
+  }
+}
+
 function updateClassroomProgress() {
-  const percent = state.currentEnrollment?.progress_percent !== null ? Math.round(state.currentEnrollment.progress_percent) : 0;
+  const percent = state.currentEnrollment?.progress_percent !== null && state.currentEnrollment?.progress_percent !== undefined
+    ? Math.round(state.currentEnrollment.progress_percent)
+    : 0;
   const completedCount = state.currentLessons.filter((l) => l.is_completed).length;
   const totalCount = state.currentLessons.length;
 
@@ -757,9 +827,10 @@ async function loadLessonMaterials(lessonId) {
 function updateCertificateStatus() {
   const certBtn = document.getElementById("btn-issue-certificate");
   const msgEl = document.getElementById("cert-requirement-message");
+  const isCompleted = isCourseCompleted(state.currentEnrollment);
   const percent = state.currentEnrollment?.progress_percent ?? 0;
 
-  if (percent >= 100) {
+  if (isCompleted) {
     if (certBtn) certBtn.style.display = "inline-flex";
     if (msgEl) {
       msgEl.innerHTML = `<strong>Parabéns!</strong> Você concluiu 100% da carga horária deste curso. Seu certificado oficial já está pronto para emissão e download.`;
