@@ -15,7 +15,8 @@
     "test:media": "tsx src/modules/media/verify_media.ts",
     "test:progress": "tsx src/modules/progress/verify_progress.ts",
     "test:certificates": "tsx src/modules/certificates/verify_certificates.ts",
-    "test:frontend": "tsx src/core/verify_frontend.ts"
+    "test:frontend": "tsx src/core/verify_frontend.ts",
+    "test": "tsx src/db/verify_triggers.ts && tsx src/core/verify_core.ts && tsx src/modules/auth/verify_auth.ts && tsx src/modules/courses/verify_courses.ts && tsx src/modules/media/verify_media.ts && tsx src/modules/progress/verify_progress.ts && tsx src/modules/certificates/verify_certificates.ts && tsx src/core/verify_frontend.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1"
