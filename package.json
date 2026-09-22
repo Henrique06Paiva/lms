@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
     "test:db": "tsx src/db/verify_triggers.ts",
     "test:core": "tsx src/core/verify_core.ts",
     "test:auth": "tsx src/modules/auth/verify_auth.ts",

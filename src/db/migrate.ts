@@ -10,7 +10,7 @@ interface MigrationRow {
 /**
  * Função responsável por executar as migrações pendentes no banco SQLite.
  */
-function runMigrations(): void {
+export function runMigrations(): void {
   console.log("📦 [Migrations] Iniciando processo de migração...");
 
   // 1. Garante que a tabela de controle de histórico exista
