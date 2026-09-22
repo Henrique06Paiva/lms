@@ -15,6 +15,7 @@ const state = {
   activeFilter: "all",
   searchQuery: "",
   activeClassroomTab: "overview",
+  viewMode: localStorage.getItem("educore_view_mode") || "grid",
 };
 
 export function isCourseCompleted(courseOrEnrollment) {
@@ -76,6 +77,8 @@ function injectStaticIcons() {
     "nav-icon-my-courses": icons.layers,
     "nav-icon-verify-cert": icons.shieldCheck,
     "nav-icon-plus": icons.plus,
+    "icon-view-grid": icons.layoutGrid,
+    "icon-view-list": icons.layoutList,
     "kpi-icon-courses": icons.book,
     "kpi-icon-progress": icons.checkCircle,
     "kpi-icon-certificates": icons.award,
@@ -427,6 +430,36 @@ function setupCatalogControls() {
       renderCoursesGrid();
     });
   });
+
+  // Alternador de Visualização (Grade de Fichas Técnicas vs Tabela Executiva)
+  const btnGrid = document.getElementById("btn-view-grid");
+  const btnList = document.getElementById("btn-view-list");
+
+  function updateViewModeButtons() {
+    if (state.viewMode === "grid") {
+      btnGrid?.classList.add("active");
+      btnList?.classList.remove("active");
+    } else {
+      btnList?.classList.add("active");
+      btnGrid?.classList.remove("active");
+    }
+  }
+
+  btnGrid?.addEventListener("click", () => {
+    state.viewMode = "grid";
+    localStorage.setItem("educore_view_mode", "grid");
+    updateViewModeButtons();
+    renderCoursesGrid();
+  });
+
+  btnList?.addEventListener("click", () => {
+    state.viewMode = "list";
+    localStorage.setItem("educore_view_mode", "list");
+    updateViewModeButtons();
+    renderCoursesGrid();
+  });
+
+  updateViewModeButtons();
 }
 
 function updateCatalogFilterButtons() {
@@ -492,57 +525,177 @@ function renderCoursesGrid() {
     grid.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1rem; width: 100%; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; gap: 0.75rem;">
         <span style="color: var(--text-muted);">${icons.book}</span>
-        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-weight: 600;">Nenhum curso encontrado</h3>
+        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-weight: 600;">Nenhum programa de capacitação encontrado</h3>
         <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px;">
-          Não há cursos correspondentes à categoria ou termo selecionado.
+          Não há registros correspondentes ao filtro ativo ou termo pesquisado.
         </p>
       </div>
     `;
     return;
   }
 
-  const categoryPalettes = [
-    { cat: "TECNOLOGIA", grad: "linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)" },
-    { cat: "ENGENHARIA", grad: "linear-gradient(135deg, #065f46 0%, #0f172a 100%)" },
-    { cat: "GOVERNANÇA", grad: "linear-gradient(135deg, #4c1d95 0%, #0f172a 100%)" },
-    { cat: "LIDERANÇA", grad: "linear-gradient(135deg, #831843 0%, #0f172a 100%)" },
+  const categoryTaxonomy = [
+    { cat: "SEGURANÇA & CONFORMIDADE", prefix: "SEC" },
+    { cat: "ARQUITETURA & DEVSECOPS", prefix: "ARC" },
+    { cat: "GOVERNANÇA & RISCOS", prefix: "GOV" },
+    { cat: "ENGENHARIA DE DADOS", prefix: "DAT" },
+    { cat: "LIDERANÇA CORPORATIVA", prefix: "LDR" }
   ];
 
+  // 1. Visão em Tabela Executiva
+  if (state.viewMode === "list") {
+    grid.innerHTML = `
+      <div class="executive-table-container">
+        <table class="executive-table">
+          <thead>
+            <tr>
+              <th style="width: 140px;">CÓDIGO</th>
+              <th>PROGRAMA DE CAPACITAÇÃO</th>
+              <th style="width: 100px; text-align: center;">CARGA</th>
+              <th style="width: 100px; text-align: center;">AULAS</th>
+              <th style="width: 150px;">STATUS</th>
+              <th style="width: 180px;">PROGRESSO</th>
+              <th style="width: 170px; text-align: right;">AÇÃO</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${list.map((c) => {
+              const isEnrolled = c.enrollment_id !== null && c.enrollment_id !== undefined;
+              const isCompleted = isCourseCompleted(c);
+              const percent = c.progress_percent !== null && c.progress_percent !== undefined
+                ? Math.round(c.progress_percent)
+                : 0;
+              const tax = categoryTaxonomy[c.id % categoryTaxonomy.length];
+              const code = `TRK-${tax.prefix}-${String(c.id).padStart(3, "0")}`;
+
+              let statusClass = "available";
+              let statusLabel = "Disponível";
+              if (isCompleted) {
+                statusClass = "completed";
+                statusLabel = "Concluído";
+              } else if (isEnrolled) {
+                statusClass = "in-progress";
+                statusLabel = "Em Andamento";
+              }
+
+              return `
+                <tr class="executive-table-row" data-slug="${c.slug}">
+                  <td><span class="table-code">${code}</span></td>
+                  <td>
+                    <div class="table-course-title">${c.title}</div>
+                    <div class="table-course-desc">${c.description || "Capacitação corporativa especializada de alta eficiência."}</div>
+                  </td>
+                  <td style="text-align: center; font-family: ui-monospace, monospace; font-weight: 600;">${c.workload_hours}h</td>
+                  <td style="text-align: center; font-family: ui-monospace, monospace; font-weight: 600;">${c.total_lessons || 0}</td>
+                  <td>
+                    <span class="dossier-status-pill ${statusClass}">
+                      <span class="status-dot ${statusClass}"></span>
+                      ${statusLabel}
+                    </span>
+                  </td>
+                  <td>
+                    ${isEnrolled ? `
+                      <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: ui-monospace, monospace;">
+                          <span>${percent}%</span>
+                          <span style="color: ${isCompleted ? "var(--success)" : "var(--primary)"};">${isCompleted ? "100%" : `${percent}%`}</span>
+                        </div>
+                        <div class="progress-track" style="height: 5px;">
+                          <div class="progress-fill ${isCompleted ? "completed" : ""}" style="width: ${percent}%;"></div>
+                        </div>
+                      </div>
+                    ` : `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">Disponível</span>`}
+                  </td>
+                  <td style="text-align: right;">
+                    <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; white-space: nowrap;">
+                      ${isCompleted ? `${icons.award} Certificado` : isEnrolled ? "Continuar ›" : "Iniciar ›"}
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    grid.querySelectorAll(".executive-table-row").forEach((row) => {
+      row.addEventListener("click", () => {
+        const slug = row.getAttribute("data-slug");
+        if (slug) handleOpenCourse(slug);
+      });
+    });
+
+    grid.querySelectorAll(".btn-enter-course").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const slug = btn.getAttribute("data-slug");
+        if (slug) handleOpenCourse(slug);
+      });
+    });
+    return;
+  }
+
+  // 2. Visão em Grade de Fichas Técnicas (Technical Dossiers)
   grid.innerHTML = list
-    .map((c, idx) => {
+    .map((c) => {
       const isEnrolled = c.enrollment_id !== null && c.enrollment_id !== undefined;
       const isCompleted = isCourseCompleted(c);
       const percent = c.progress_percent !== null && c.progress_percent !== undefined
         ? Math.round(c.progress_percent)
         : 0;
-      const pal = categoryPalettes[idx % categoryPalettes.length];
+      const tax = categoryTaxonomy[c.id % categoryTaxonomy.length];
+      const code = `TRK-${tax.prefix}-${String(c.id).padStart(3, "0")}`;
 
-      let statusBadge = "";
+      let statusClass = "available";
+      let statusLabel = "Disponível";
       if (isCompleted) {
-        statusBadge = `<span class="card-status-badge completed">${icons.check} Concluído</span>`;
+        statusClass = "completed";
+        statusLabel = "Concluído";
       } else if (isEnrolled) {
-        statusBadge = `<span class="card-status-badge enrolled">Em Andamento</span>`;
-      } else {
-        statusBadge = `<span class="card-status-badge available">Disponível</span>`;
+        statusClass = "in-progress";
+        statusLabel = "Em Andamento";
       }
 
       return `
         <div class="course-card" data-slug="${c.slug}">
-          <div class="card-banner" style="background: ${pal.grad};">
-            <span class="card-category-badge">${pal.cat}</span>
-            ${statusBadge}
+          <div class="dossier-header">
+            <div class="dossier-meta">
+              <span class="dossier-code">${code}</span>
+              <span class="dossier-category">${tax.cat}</span>
+            </div>
+            <div class="dossier-status-pill ${statusClass}">
+              <span class="status-dot ${statusClass}"></span>
+              <span>${statusLabel}</span>
+            </div>
           </div>
-          <div class="card-body">
-            <h3 class="card-title">${c.title}</h3>
-            <p class="card-desc">${c.description || "Capacitação profissional com metodologia prática e certificação de conformidade."}</p>
+
+          <div class="dossier-body">
+            <h3 class="dossier-title">${c.title}</h3>
+            <p class="dossier-desc">${c.description || "Capacitação corporativa especializada com metodologia prática e certificação de conformidade."}</p>
             
+            <div class="dossier-specs-grid">
+              <div class="dossier-spec-item">
+                <span class="dossier-spec-label">Carga</span>
+                <span class="dossier-spec-value">${c.workload_hours}h</span>
+              </div>
+              <div class="dossier-spec-item">
+                <span class="dossier-spec-label">Módulos</span>
+                <span class="dossier-spec-value">${c.total_lessons || 0} aulas</span>
+              </div>
+              <div class="dossier-spec-item">
+                <span class="dossier-spec-label">Validação</span>
+                <span class="dossier-spec-value">Certificado</span>
+              </div>
+            </div>
+
             ${
               isEnrolled
                 ? `
-                <div class="progress-container">
-                  <div class="progress-header">
-                    <span>Progresso do Aluno</span>
-                    <strong style="color: ${isCompleted ? "var(--success)" : "var(--primary)"};">${percent}%</strong>
+                <div class="dossier-progress">
+                  <div class="dossier-progress-top">
+                    <span>Evolução da Trilha</span>
+                    <strong class="dossier-progress-pct" style="color: ${isCompleted ? "var(--success)" : "var(--primary)"};">${percent}%</strong>
                   </div>
                   <div class="progress-track">
                     <div class="progress-fill ${isCompleted ? "completed" : ""}" style="width: ${percent}%;"></div>
@@ -551,16 +704,12 @@ function renderCoursesGrid() {
               `
                 : ""
             }
+          </div>
 
-            <div class="card-footer">
-              <div class="card-meta-list">
-                <span class="card-meta-item">${icons.clock} ${c.workload_hours}h</span>
-                <span class="card-meta-item">${icons.layers} ${c.total_lessons || 0} aulas</span>
-              </div>
-              <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">
-                ${isCompleted ? `${icons.award} Ver Certificado` : isEnrolled ? "Continuar" : "Matricular-se"}
-              </button>
-            </div>
+          <div class="dossier-footer">
+            <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} dossier-action-btn btn-enter-course" data-slug="${c.slug}">
+              ${isCompleted ? `${icons.award} Certificado Emitido` : isEnrolled ? "Continuar Trilha ›" : "Iniciar Capacitação ›"}
+            </button>
           </div>
         </div>
       `;
@@ -570,6 +719,14 @@ function renderCoursesGrid() {
   grid.querySelectorAll(".course-card").forEach((card) => {
     card.addEventListener("click", () => {
       const slug = card.getAttribute("data-slug");
+      if (slug) handleOpenCourse(slug);
+    });
+  });
+
+  grid.querySelectorAll(".btn-enter-course").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const slug = btn.getAttribute("data-slug");
       if (slug) handleOpenCourse(slug);
     });
   });

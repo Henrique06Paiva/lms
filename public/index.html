@@ -179,17 +179,27 @@
           </div>
         </div>
 
-        <!-- Cabeçalho do Catálogo com Filtros -->
+        <!-- Cabeçalho do Catálogo com Filtros e Alternador de Visão -->
         <div class="catalog-header">
           <div class="catalog-title-group">
             <h1 id="courses-view-title">Programas de Capacitação Corporativa</h1>
             <p>Explore trilhas de conhecimento e aprimore suas competências profissionais.</p>
           </div>
-          <div class="catalog-tabs">
-            <button class="catalog-tab active" data-filter="all">Todos os Cursos</button>
-            <button class="catalog-tab" data-filter="my-courses">Meus Cursos</button>
-            <button class="catalog-tab" data-filter="in-progress">Em Andamento</button>
-            <button class="catalog-tab" data-filter="completed">Concluídos</button>
+          <div class="catalog-toolbar">
+            <div class="catalog-tabs">
+              <button class="catalog-tab active" data-filter="all">Todos os Cursos</button>
+              <button class="catalog-tab" data-filter="my-courses">Meus Cursos</button>
+              <button class="catalog-tab" data-filter="in-progress">Em Andamento</button>
+              <button class="catalog-tab" data-filter="completed">Concluídos</button>
+            </div>
+            <div class="view-mode-toggle" id="view-mode-toggle" role="group" aria-label="Modo de visualização">
+              <button class="view-mode-btn active" id="btn-view-grid" title="Visualização em Grade de Fichas" aria-label="Visualização em Grade">
+                <span id="icon-view-grid"></span>
+              </button>
+              <button class="view-mode-btn" id="btn-view-list" title="Visualização em Tabela Executiva" aria-label="Visualização em Tabela">
+                <span id="icon-view-list"></span>
+              </button>
+            </div>
           </div>
         </div>
 
