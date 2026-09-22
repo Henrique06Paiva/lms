@@ -28,8 +28,13 @@ export async function parseBody(
 ): Promise<any> {
   const contentType = rawReq.headers["content-type"] ?? "";
 
-  // Uploads multipart (ex: vídeos) serão tratados via streams separados nos módulos específicos
-  if (contentType.includes("multipart/form-data")) {
+  // Uploads binários ou streams (vídeos, arquivos grandes) não são consumidos aqui
+  if (
+    contentType.includes("multipart/form-data") ||
+    contentType.includes("video/") ||
+    contentType.includes("application/octet-stream") ||
+    contentType.includes("application/pdf")
+  ) {
     return null;
   }
 

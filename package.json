@@ -11,7 +11,8 @@
     "test:db": "tsx src/db/verify_triggers.ts",
     "test:core": "tsx src/core/verify_core.ts",
     "test:auth": "tsx src/modules/auth/verify_auth.ts",
-    "test:courses": "tsx src/modules/courses/verify_courses.ts"
+    "test:courses": "tsx src/modules/courses/verify_courses.ts",
+    "test:media": "tsx src/modules/media/verify_media.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1"
