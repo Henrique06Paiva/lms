@@ -3,6 +3,7 @@ import { AppError } from "./errors.js";
 import { enhanceRequest } from "./request.js";
 import { enhanceResponse } from "./response.js";
 import { Router } from "./router.js";
+import { serveStaticFile } from "./static.js";
 
 export function createAppServer(router: Router): http.Server {
   const server = http.createServer(
@@ -24,11 +25,14 @@ export function createAppServer(router: Router): http.Server {
         const handled = await router.handle(req, res);
 
         if (!handled) {
-          res.status(404).json({
-            error: "Rota não encontrada",
-            path: req.url,
-            method: req.method,
-          });
+          const isStatic = serveStaticFile(rawReq, rawRes);
+          if (!isStatic) {
+            res.status(404).json({
+              error: "Rota não encontrada",
+              path: req.url,
+              method: req.method,
+            });
+          }
         }
       } catch (error: any) {
         if (error instanceof AppError) {

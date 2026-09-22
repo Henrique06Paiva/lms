@@ -1,14 +1,23 @@
-import { db } from "./db/connection.js";
+import { createAppServer } from "./core/server.js";
+import { Router } from "./core/router.js";
+import { registerAuthRoutes } from "./modules/auth/auth.routes.js";
+import { registerCoursesRoutes } from "./modules/courses/courses.routes.js";
+import { registerMediaRoutes } from "./modules/media/media.routes.js";
+import { registerProgressRoutes } from "./modules/progress/progress.routes.js";
+import { registerCertificatesRoutes } from "./modules/certificates/certificates.routes.js";
 
-// Executa uma query simples de teste no SQLite nativo
-const result = db.prepare("SELECT sqlite_version() as version").get() as {
-  version: string;
-};
+const PORT = parseInt(process.env.PORT || "3000", 10);
+const router = new Router();
 
-console.log("🚀 EduCore DB conectado com sucesso!");
-console.log(`📦 Versão do SQLite: ${result.version}`);
-console.log(`🔒 WAL habilitado?`, db.pragma("journal_mode", { simple: true }));
-console.log(
-  `🔑 Foreign Keys ativadas?`,
-  db.pragma("foreign_keys", { simple: true }),
-);
+// Registra todos os módulos do EduCore
+registerAuthRoutes(router);
+registerCoursesRoutes(router);
+registerMediaRoutes(router);
+registerProgressRoutes(router);
+registerCertificatesRoutes(router);
+
+const server = createAppServer(router);
+
+server.listen(PORT, () => {
+  console.log(`🚀 [EduCore] Servidor rodando com sucesso em http://localhost:${PORT}`);
+});
