@@ -10,7 +10,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "test:db": "tsx src/db/verify_triggers.ts",
     "test:core": "tsx src/core/verify_core.ts",
-    "test:auth": "tsx src/modules/auth/verify_auth.ts"
+    "test:auth": "tsx src/modules/auth/verify_auth.ts",
+    "test:courses": "tsx src/modules/courses/verify_courses.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1"

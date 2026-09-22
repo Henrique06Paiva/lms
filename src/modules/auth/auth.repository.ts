@@ -11,7 +11,7 @@ export interface UserRecord {
   updated_at: string;
 }
 
-export interface SessionRecord {
+export interface  SessionRecord {
   id: string;
   user_id: number;
   expires_at: string;
