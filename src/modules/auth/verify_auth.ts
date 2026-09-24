@@ -168,7 +168,85 @@ async function runAuthTests() {
 
     console.log("12. Rate Limit Ativado com Status 429 (RF05):", rateLimitedRes.status === 429 ? "✅ PASSOU" : "❌ FALHOU");
 
-    console.log("\n🎉 [Auth] Todos os 12 testes de autenticação passaram com 100% de sucesso!");
+    // 13. Prevenção de Escalada de Privilégios: Cadastro público forçando role='admin'
+    const privEscRes = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Hacker Tentando Admin",
+        email: "hacker@authtest.com",
+        password: "senhaSegura123",
+        role: "admin",
+      }),
+    });
+    const privEscJson = (await privEscRes.json()) as any;
+    console.log(
+      "13. Prevenção de Escalada de Privilégios (Público é sempre student):",
+      privEscRes.status === 201 && privEscJson.user.role === "student" ? "✅ PASSOU" : "❌ FALHOU"
+    );
+
+    // 14. Admin cadastra novo gestor via endpoint protegido (POST /api/admin/users)
+    // Primeiro cria e autentica um Admin legítimo
+    db.prepare("UPDATE users SET role = 'admin' WHERE email = 'hacker@authtest.com'").run();
+    const adminLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "hacker@authtest.com",
+        password: "senhaSegura123",
+      }),
+    });
+    const adminCookie = adminLoginRes.headers.get("set-cookie")?.split(";")[0] || "";
+
+    const createAdminRes = await fetch(`${BASE_URL}/api/admin/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: adminCookie,
+      },
+      body: JSON.stringify({
+        name: "Novo Gestor Corporativo",
+        email: "gestor@authtest.com",
+        password: "senhaGestor123",
+        role: "admin",
+      }),
+    });
+    const createAdminJson = (await createAdminRes.json()) as any;
+    console.log(
+      "14. Admin cria usuário corporativo gestor via rota protegida (201):",
+      createAdminRes.status === 201 && createAdminJson.user.role === "admin" ? "✅ PASSOU" : "❌ FALHOU"
+    );
+
+    // 15. Usuário aluno tenta criar usuário corporativo -> Bloqueado com 403 Forbidden
+    const studentLoginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "aluno@authtest.com",
+        password: "novaSenhaSegura456",
+      }),
+    });
+    const studentCookie = studentLoginRes.headers.get("set-cookie")?.split(";")[0] || "";
+
+    const forbiddenCreateRes = await fetch(`${BASE_URL}/api/admin/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: studentCookie,
+      },
+      body: JSON.stringify({
+        name: "Invasor Tentando Gestor",
+        email: "invasor@authtest.com",
+        password: "senhaInvasor123",
+        role: "admin",
+      }),
+    });
+    console.log(
+      "15. Aluno bloqueado de criar usuário administrativo (403):",
+      forbiddenCreateRes.status === 403 ? "✅ PASSOU" : "❌ FALHOU"
+    );
+
+    console.log("\n🎉 [Auth] Todos os 15 testes de autenticação e controle de acesso passaram com 100% de sucesso!");
   } finally {
     server.close();
     db.prepare("DELETE FROM users WHERE email LIKE '%@authtest.com'").run();

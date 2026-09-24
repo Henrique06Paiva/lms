@@ -1,9 +1,9 @@
 import { Router } from "../../core/router.js";
-import { authenticate, SESSION_COOKIE_NAME, extractSessionToken } from "./auth.middleware.js";
+import { authenticate, requireRole, SESSION_COOKIE_NAME, extractSessionToken } from "./auth.middleware.js";
 import { authService } from "./auth.service.js";
 
 export function registerAuthRoutes(router: Router): void {
-  // 1. Cadastro de usuário (RF01)
+  // 1. Cadastro de usuário (RF01 - público, sempre perfil student)
   router.post("/api/auth/register", async (req, res) => {
     const user = await authService.register(req.body);
     res.status(201).json({
@@ -11,6 +11,20 @@ export function registerAuthRoutes(router: Router): void {
       user,
     });
   });
+
+  // 2. Cadastro administrativo de usuário/gestor (Apenas Admin autenticado)
+  router.post(
+    "/api/admin/users",
+    authenticate,
+    requireRole("admin"),
+    async (req, res) => {
+      const user = await authService.createUserByAdmin(req.body);
+      res.status(201).json({
+        message: "Usuário corporativo cadastrado com sucesso",
+        user,
+      });
+    }
+  );
 
   // 2. Login de usuário (RF02)
   router.post("/api/auth/login", async (req, res) => {

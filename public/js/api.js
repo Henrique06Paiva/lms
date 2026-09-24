@@ -46,6 +46,10 @@ export const api = {
     resetConfirm: (token, newPassword) => request("/api/auth/password/reset-confirm", { method: "POST", body: { token, newPassword } }),
   },
 
+  admin: {
+    createUser: (data) => request("/api/admin/users", { method: "POST", body: data }),
+  },
+
   courses: {
     list: () => request("/api/courses"),
     get: (slug) => request(`/api/courses/${slug}`),

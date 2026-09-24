@@ -53,6 +53,45 @@ export class AuthService {
     const salt = generateSalt();
     const passwordHash = hashPassword(dto.password, salt);
 
+    // Segurança: Cadastro público é forçosamente perfil "student" (Prevenção de Escalada de Privilégios)
+    const user = authRepository.createUser({
+      name: dto.name.trim(),
+      email: dto.email,
+      passwordHash,
+      passwordSalt: salt,
+      role: "student",
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+  }
+
+  // 2. Cadastro administrativo de usuário / gestor (apenas via rota administrativa autenticada)
+  public async createUserByAdmin(dto: RegisterDTO): Promise<AuthenticatedUser> {
+    if (!dto.name || dto.name.trim().length < 2) {
+      throw new AppError(400, "Nome deve ter pelo menos 2 caracteres");
+    }
+
+    if (!dto.email || !dto.email.includes("@")) {
+      throw new AppError(400, "E-mail inválido");
+    }
+
+    if (!dto.password || dto.password.length < 6) {
+      throw new AppError(400, "Senha deve ter pelo menos 6 caracteres");
+    }
+
+    const existingUser = authRepository.findUserByEmail(dto.email);
+    if (existingUser) {
+      throw new AppError(409, "E-mail já cadastrado no sistema");
+    }
+
+    const salt = generateSalt();
+    const passwordHash = hashPassword(dto.password, salt);
+
     const user = authRepository.createUser({
       name: dto.name.trim(),
       email: dto.email,

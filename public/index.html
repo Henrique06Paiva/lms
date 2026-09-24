@@ -1,482 +1,929 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR" data-theme="light">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduCore — Enterprise Learning Platform</title>
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-
-  <!-- Barra de Navegação Corporativa -->
-  <header class="navbar">
-    <div class="nav-left">
-      <div class="nav-brand" id="nav-brand-home">
-        <div class="brand-icon" id="brand-logo-icon"></div>
-        <div class="brand-text">
-          <span class="brand-name">EduCore</span>
-          <span class="brand-badge">Enterprise LMS</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduCore — Enterprise Learning Platform</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <!-- Barra de Navegação Corporativa -->
+    <header class="navbar">
+      <div class="nav-left">
+        </div>
+        <div class="nav-search" id="global-search-container">
+          <span id="search-icon-container"></span>
+          <input
+            type="text"
+            id="global-search-input"
+            placeholder="Buscar cursos"
+          />
         </div>
       </div>
-      <div class="nav-search" id="global-search-container">
-        <span id="search-icon-container"></span>
-        <input type="text" id="global-search-input" placeholder="Buscar cursos, tópicos ou competências...">
+
+      <div class="nav-actions">
+        <button
+          class="theme-toggle-btn"
+          id="btn-toggle-theme"
+          title="Alternar tema claro/escuro"
+        ></button>
+        <div
+          id="nav-actions"
+          style="display: flex; align-items: center; gap: 0.75rem"
+        ></div>
       </div>
-    </div>
+    </header>
 
-    <div class="nav-actions">
-      <button class="theme-toggle-btn" id="btn-toggle-theme" title="Alternar tema claro/escuro"></button>
-      <div id="nav-actions" style="display: flex; align-items: center; gap: 0.75rem;"></div>
-    </div>
-  </header>
+    <!-- Estrutura Principal Flexbox -->
+    <div class="app-container">
+      <!-- Sidebar de Navegação Corporativa -->
+      <aside class="sidebar" id="app-sidebar">
+        <div class="sidebar-section-title">Aprendizado</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-nav-item active" id="nav-courses">
+            <span id="nav-icon-courses"></span>
+            <span>Catálogo de Cursos</span>
+          </a>
+          <a class="sidebar-nav-item" id="nav-my-courses">
+            <span id="nav-icon-my-courses"></span>
+            <span>Meus Cursos</span>
+          </a>
+        </nav>
 
-  <!-- Estrutura Principal Flexbox -->
-  <div class="app-container">
-    
-    <!-- Sidebar de Navegação Corporativa -->
-    <aside class="sidebar" id="app-sidebar">
-      <div class="sidebar-section-title">Aprendizado</div>
-      <nav class="sidebar-nav">
-        <a class="sidebar-nav-item active" id="nav-courses">
-          <span id="nav-icon-courses"></span>
-          <span>Catálogo de Cursos</span>
-        </a>
-        <a class="sidebar-nav-item" id="nav-my-courses">
-          <span id="nav-icon-my-courses"></span>
-          <span>Meus Cursos</span>
-        </a>
-      </nav>
+        <div class="sidebar-section-title">Conformidade</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-nav-item" id="nav-verify-cert">
+            <span id="nav-icon-verify-cert"></span>
+            <span>Validar Certificado</span>
+          </a>
+        </nav>
 
-      <div class="sidebar-section-title">Conformidade</div>
-      <nav class="sidebar-nav">
-        <a class="sidebar-nav-item" id="nav-verify-cert">
-          <span id="nav-icon-verify-cert"></span>
-          <span>Validar Certificado</span>
-        </a>
-      </nav>
+        <div
+          class="sidebar-section-title"
+          id="admin-section-title"
+          style="display: none"
+        >
+          Gestão
+        </div>
+        <nav class="sidebar-nav" id="admin-section-nav" style="display: none">
+          <a class="sidebar-nav-item" id="btn-open-create-course">
+            <span id="nav-icon-plus"></span>
+            <span>Criar Novo Curso</span>
+          </a>
+          <a class="sidebar-nav-item" id="btn-open-admin-create-user">
+            <span id="nav-icon-user-plus"></span>
+            <span>Cadastrar Usuário / Gestor</span>
+          </a>
+        </nav>
+      </aside>
 
-      <div class="sidebar-section-title" id="admin-section-title" style="display: none;">Gestão</div>
-      <nav class="sidebar-nav" id="admin-section-nav" style="display: none;">
-        <a class="sidebar-nav-item" id="btn-open-create-course">
-          <span id="nav-icon-plus"></span>
-          <span>Criar Novo Curso</span>
-        </a>
-      </nav>
-    </aside>
-
-    <!-- Área de Conteúdo Dinâmico -->
-    <main class="main-content">
-      
-      <!-- Visão 0: Autenticação Corporativa (Tela Dedicada de Login/Cadastro) -->
-      <section id="view-auth" style="display: none;">
-        <div class="auth-wrapper">
-          <div class="auth-card">
-            
-            <div class="auth-header">
-              <div class="auth-brand-logo" id="auth-brand-logo"></div>
-              <h2>Portal Corporativo EduCore</h2>
-              <p>Acesse seu ambiente corporativo de capacitação, trilhas de conhecimento e conformidade.</p>
-            </div>
-
-            <!-- Alternador de Ação (Login vs Cadastro) -->
-            <div class="auth-nav-tabs">
-              <button class="auth-tab-btn active" id="auth-tab-login">Acessar Conta</button>
-              <button class="auth-tab-btn" id="auth-tab-register">Cadastre-se</button>
-            </div>
-
-            <!-- Formulário de Login -->
-            <form id="form-auth-login" class="auth-form">
-              <div class="form-group">
-                <label class="form-label">E-mail Corporativo</label>
-                <input type="email" id="auth-login-email" class="form-input" placeholder="seu.nome@empresa.com" required>
+      <!-- Área de Conteúdo Dinâmico -->
+      <main class="main-content">
+        <!-- Visão 0: Autenticação Corporativa (Tela Dedicada de Login/Cadastro) -->
+        <section id="view-auth" style="display: none">
+          <div class="auth-wrapper">
+            <div class="auth-card">
+              <div class="auth-header">
+                <div class="auth-brand-logo" id="auth-brand-logo"></div>
+                <h2>Portal EduCore</h2>
               </div>
-              <div class="form-group">
-                <label class="form-label">Senha</label>
-                <input type="password" id="auth-login-password" class="form-input" placeholder="••••••••" required>
-              </div>
-              <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%; padding: 0.75rem; font-size: 0.95rem;">
-                Entrar no Sistema
-              </button>
-            </form>
 
-            <!-- Formulário de Cadastro -->
-            <form id="form-auth-register" class="auth-form" style="display: none;">
-              <div class="form-group">
-                <label class="form-label">Nome Completo</label>
-                <input type="text" id="auth-reg-name" class="form-input" placeholder="Ex: Ana Silva" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">E-mail Corporativo</label>
-                <input type="email" id="auth-reg-email" class="form-input" placeholder="ana.silva@empresa.com" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Senha de Acesso (mínimo 6 caracteres)</label>
-                <input type="password" id="auth-reg-password" class="form-input" placeholder="••••••••" required minlength="6">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Perfil de Acesso</label>
-                <select id="auth-reg-role" class="form-input">
-                  <option value="student">Colaborador / Aluno</option>
-                  <option value="admin">Gestor / Instrutor (Admin)</option>
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%; padding: 0.75rem; font-size: 0.95rem;">
-                Criar Minha Conta
-              </button>
-            </form>
-
-            <!-- Preenchimento Rápido com Dados de Demonstração -->
-            <div class="demo-credentials-box">
-              <div class="demo-title">
-                <span id="demo-info-icon"></span>
-                <span>Acesso Rápido de Teste:</span>
-              </div>
-              <div class="demo-buttons">
-                <button type="button" class="btn-demo-pill" id="btn-fill-admin" title="Preencher com Administrador">
-                  👑 Administrador
+              <!-- Alternador de Ação (Login vs Cadastro) -->
+              <div class="auth-nav-tabs">
+                <button class="auth-tab-btn active" id="auth-tab-login">
+                  Acessar Conta
                 </button>
-                <button type="button" class="btn-demo-pill" id="btn-fill-student" title="Preencher com Aluno">
-                  🎓 Aluno de Teste
+                <button class="auth-tab-btn" id="auth-tab-register">
+                  Cadastre-se
                 </button>
               </div>
-            </div>
 
-            <!-- Link para Validação Pública de Certificados -->
-            <div class="auth-footer-link">
-              <span>Precisa apenas verificar a autenticidade de um certificado?</span>
-              <a id="btn-auth-to-verify">Acessar Validador Público de Certificados ›</a>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <!-- Visão 1: Catálogo de Cursos & Dashboard de Aprendizado -->
-      <section id="view-courses" style="display: flex; flex-direction: column; gap: 2rem;">
-        
-        <!-- Faixa de Métricas do Aluno (KPIs) -->
-        <div class="metrics-strip" id="metrics-strip">
-          <div class="metric-card">
-            <div class="metric-icon-box blue" id="kpi-icon-courses"></div>
-            <div class="metric-data">
-              <span class="metric-label">Cursos Matriculados</span>
-              <span class="metric-value" id="kpi-enrolled-count">0</span>
-            </div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon-box green" id="kpi-icon-progress"></div>
-            <div class="metric-data">
-              <span class="metric-label">Progresso Médio Geral</span>
-              <span class="metric-value" id="kpi-avg-progress">0%</span>
-            </div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-icon-box amber" id="kpi-icon-certificates"></div>
-            <div class="metric-data">
-              <span class="metric-label">Certificados Conquistados</span>
-              <span class="metric-value" id="kpi-certificates-count">0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cabeçalho do Catálogo com Filtros e Alternador de Visão -->
-        <div class="catalog-header">
-          <div class="catalog-title-group">
-            <h1 id="courses-view-title">Programas de Capacitação Corporativa</h1>
-            <p>Explore trilhas de conhecimento e aprimore suas competências profissionais.</p>
-          </div>
-          <div class="catalog-toolbar">
-            <div class="catalog-tabs">
-              <button class="catalog-tab active" data-filter="all">Todos os Cursos</button>
-              <button class="catalog-tab" data-filter="my-courses">Meus Cursos</button>
-              <button class="catalog-tab" data-filter="in-progress">Em Andamento</button>
-              <button class="catalog-tab" data-filter="completed">Concluídos</button>
-            </div>
-            <div class="view-mode-toggle" id="view-mode-toggle" role="group" aria-label="Modo de visualização">
-              <button class="view-mode-btn active" id="btn-view-grid" title="Visualização em Grade de Fichas" aria-label="Visualização em Grade">
-                <span id="icon-view-grid"></span>
-              </button>
-              <button class="view-mode-btn" id="btn-view-list" title="Visualização em Tabela Executiva" aria-label="Visualização em Tabela">
-                <span id="icon-view-list"></span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grid de Cursos -->
-        <div class="course-grid" id="course-grid"></div>
-      </section>
-
-      <!-- Visão 2: Sala de Aula & Player Customizado -->
-      <section id="view-classroom" style="display: none; flex-direction: column; gap: 1.5rem;">
-        
-        <!-- Breadcrumb Superior -->
-        <div class="classroom-header">
-          <div class="breadcrumb-nav">
-            <a id="btn-back-to-courses">Catálogo</a>
-            <span id="breadcrumb-sep-1">›</span>
-            <span id="breadcrumb-course-title" style="color: var(--text-primary); font-weight: 500;">Curso</span>
-            <span id="breadcrumb-sep-2">›</span>
-            <span id="breadcrumb-lesson-title" style="color: var(--text-muted);">Aula</span>
-          </div>
-          <div id="classroom-course-badge-container"></div>
-        </div>
-
-        <div class="classroom-container">
-          <!-- Coluna Esquerda: Player de Vídeo e Painel da Aula -->
-          <div class="player-column">
-            
-            <!-- Player Customizado -->
-            <div class="custom-player-wrapper" id="player-container">
-              <video id="classroom-video" preload="metadata"></video>
-              <div class="player-controls" id="player-controls">
-                <div class="scrubber-track" data-scrubber-track>
-                  <div class="scrubber-fill" data-scrubber-fill></div>
+              <!-- Formulário de Login -->
+              <form id="form-auth-login" class="auth-form">
+                <div class="form-group">
+                  <label class="form-label">E-mail</label>
+                  <input
+                    type="email"
+                    id="auth-login-email"
+                    class="form-input"
+                    placeholder="seu.nome@empresa.com"
+                    required
+                  />
                 </div>
-                <div class="controls-row">
-                  <div class="controls-group">
-                    <button class="player-btn" data-play-btn title="Reproduzir / Pausar (Espaço)">
-                      <span id="player-play-icon"></span>
-                    </button>
-                    <button class="player-btn" data-replay10-btn title="Voltar 10 segundos (←)">
-                      <span id="player-replay-icon"></span>
-                    </button>
-                    <button class="player-btn" data-forward10-btn title="Avançar 10 segundos (→)">
-                      <span id="player-forward-icon"></span>
-                    </button>
-                    <div class="volume-wrapper">
-                      <button class="player-btn" data-volume-btn title="Silenciar / Ativar Som (M)">
-                        <span id="player-volume-icon"></span>
+                <div class="form-group">
+                  <label class="form-label">Senha</label>
+                  <input
+                    type="password"
+                    id="auth-login-password"
+                    class="form-input"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  style="
+                    margin-top: 0.5rem;
+                    width: 100%;
+                    padding: 0.75rem;
+                    font-size: 0.95rem;
+                  "
+                >
+                  Entrar
+                </button>
+              </form>
+
+              <!-- Formulário de Cadastro -->
+              <form
+                id="form-auth-register"
+                class="auth-form"
+                style="display: none"
+              >
+                <div class="form-group">
+                  <label class="form-label">Nome Completo</label>
+                  <input
+                    type="text"
+                    id="auth-reg-name"
+                    class="form-input"
+                    placeholder="Ex: Ana Silva"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">E-mail</label>
+                  <input
+                    type="email"
+                    id="auth-reg-email"
+                    class="form-input"
+                    placeholder="ana.silva@empresa.com"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label"
+                    >Senha de Acesso (mínimo 6 caracteres)</label
+                  >
+                  <input
+                    type="password"
+                    id="auth-reg-password"
+                    class="form-input"
+                    placeholder="••••••••"
+                    required
+                    minlength="6"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  style="
+                    margin-top: 0.5rem;
+                    width: 100%;
+                    padding: 0.75rem;
+                    font-size: 0.95rem;
+                  "
+                >
+                  Criar Minha Conta
+                </button>
+              </form>
+
+              <!-- Preenchimento Rápido com Dados de Demonstração -->
+              <div class="demo-credentials-box">
+                <div class="demo-title">
+                  <span id="demo-info-icon"></span>
+                  <span>Acesso Rápido de Teste:</span>
+                </div>
+                <div class="demo-buttons">
+                  <button
+                    type="button"
+                    class="btn-demo-pill"
+                    id="btn-fill-admin"
+                    title="Preencher com Administrador"
+                  >
+                    👑 Administrador
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-demo-pill"
+                    id="btn-fill-student"
+                    title="Preencher com Aluno"
+                  >
+                    🎓 Aluno de Teste
+                  </button>
+                </div>
+              </div>
+
+              <!-- Link para Validação Pública de Certificados -->
+              <div class="auth-footer-link">
+                <span
+                  >Precisa apenas verificar a autenticidade de um
+                  certificado?</span
+                >
+                <a id="btn-auth-to-verify"
+                  >Acessar Validador Público de Certificados ›</a
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Visão 1: Catálogo de Cursos & Dashboard de Aprendizado -->
+        <section
+          id="view-courses"
+          style="display: flex; flex-direction: column; gap: 2rem"
+        >
+          <!-- Faixa de Métricas do Aluno (KPIs) -->
+          <div class="metrics-strip" id="metrics-strip">
+            <div class="metric-card">
+              <div class="metric-icon-box blue" id="kpi-icon-courses"></div>
+              <div class="metric-data">
+                <span class="metric-label">Cursos Matriculados</span>
+                <span class="metric-value" id="kpi-enrolled-count">0</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-icon-box green" id="kpi-icon-progress"></div>
+              <div class="metric-data">
+                <span class="metric-label">Progresso Médio Geral</span>
+                <span class="metric-value" id="kpi-avg-progress">0%</span>
+              </div>
+            </div>
+            <div class="metric-card">
+              <div
+                class="metric-icon-box amber"
+                id="kpi-icon-certificates"
+              ></div>
+              <div class="metric-data">
+                <span class="metric-label">Certificados Conquistados</span>
+                <span class="metric-value" id="kpi-certificates-count">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cabeçalho do Catálogo com Filtros e Alternador de Visão -->
+          <div class="catalog-header">
+            <div class="catalog-title-group">
+              <h1 id="courses-view-title">
+                Programas de Capacitação Corporativa
+              </h1>
+              <p>
+                Explore trilhas de conhecimento e aprimore suas competências
+                profissionais.
+              </p>
+            </div>
+            <div class="catalog-toolbar">
+              <div class="catalog-tabs">
+                <button class="catalog-tab active" data-filter="all">
+                  Todos os Cursos
+                </button>
+                <button class="catalog-tab" data-filter="my-courses">
+                  Meus Cursos
+                </button>
+                <button class="catalog-tab" data-filter="in-progress">
+                  Em Andamento
+                </button>
+                <button class="catalog-tab" data-filter="completed">
+                  Concluídos
+                </button>
+              </div>
+              <div
+                class="view-mode-toggle"
+                id="view-mode-toggle"
+                role="group"
+                aria-label="Modo de visualização"
+              >
+                <button
+                  class="view-mode-btn active"
+                  id="btn-view-grid"
+                  title="Visualização em Grade de Fichas"
+                  aria-label="Visualização em Grade"
+                >
+                  <span id="icon-view-grid"></span>
+                </button>
+                <button
+                  class="view-mode-btn"
+                  id="btn-view-list"
+                  title="Visualização em Tabela Executiva"
+                  aria-label="Visualização em Tabela"
+                >
+                  <span id="icon-view-list"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid de Cursos -->
+          <div class="course-grid" id="course-grid"></div>
+        </section>
+
+        <!-- Visão 2: Sala de Aula & Player Customizado -->
+        <section
+          id="view-classroom"
+          style="display: none; flex-direction: column; gap: 1.5rem"
+        >
+          <!-- Breadcrumb Superior -->
+          <div class="classroom-header">
+            <div class="breadcrumb-nav">
+              <a id="btn-back-to-courses">Catálogo</a>
+              <span id="breadcrumb-sep-1">›</span>
+              <span
+                id="breadcrumb-course-title"
+                style="color: var(--text-primary); font-weight: 500"
+                >Curso</span
+              >
+              <span id="breadcrumb-sep-2">›</span>
+              <span
+                id="breadcrumb-lesson-title"
+                style="color: var(--text-muted)"
+                >Aula</span
+              >
+            </div>
+            <div id="classroom-course-badge-container"></div>
+          </div>
+
+          <div class="classroom-container">
+            <!-- Coluna Esquerda: Player de Vídeo e Painel da Aula -->
+            <div class="player-column">
+              <!-- Player Customizado -->
+              <div class="custom-player-wrapper" id="player-container">
+                <video id="classroom-video" preload="metadata"></video>
+                <div class="player-controls" id="player-controls">
+                  <div class="scrubber-track" data-scrubber-track>
+                    <div class="scrubber-fill" data-scrubber-fill></div>
+                  </div>
+                  <div class="controls-row">
+                    <div class="controls-group">
+                      <button
+                        class="player-btn"
+                        data-play-btn
+                        title="Reproduzir / Pausar (Espaço)"
+                      >
+                        <span id="player-play-icon"></span>
                       </button>
-                      <input type="range" class="volume-slider" data-volume-slider min="0" max="1" step="0.05" value="1">
+                      <button
+                        class="player-btn"
+                        data-replay10-btn
+                        title="Voltar 10 segundos (←)"
+                      >
+                        <span id="player-replay-icon"></span>
+                      </button>
+                      <button
+                        class="player-btn"
+                        data-forward10-btn
+                        title="Avançar 10 segundos (→)"
+                      >
+                        <span id="player-forward-icon"></span>
+                      </button>
+                      <div class="volume-wrapper">
+                        <button
+                          class="player-btn"
+                          data-volume-btn
+                          title="Silenciar / Ativar Som (M)"
+                        >
+                          <span id="player-volume-icon"></span>
+                        </button>
+                        <input
+                          type="range"
+                          class="volume-slider"
+                          data-volume-slider
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value="1"
+                        />
+                      </div>
+                      <span class="time-display" data-time-display
+                        >00:00 / 00:00</span
+                      >
                     </div>
-                    <span class="time-display" data-time-display>00:00 / 00:00</span>
+                    <div class="controls-group">
+                      <select
+                        class="speed-select"
+                        data-speed-select
+                        title="Velocidade de Reprodução"
+                      >
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                      </select>
+                      <button
+                        class="player-btn"
+                        data-fullscreen-btn
+                        title="Tela Cheia (F)"
+                      >
+                        <span id="player-fullscreen-icon"></span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="controls-group">
-                    <select class="speed-select" data-speed-select title="Velocidade de Reprodução">
-                      <option value="0.75">0.75x</option>
-                      <option value="1" selected>1.0x</option>
-                      <option value="1.25">1.25x</option>
-                      <option value="1.5">1.5x</option>
-                      <option value="2">2.0x</option>
-                    </select>
-                    <button class="player-btn" data-fullscreen-btn title="Tela Cheia (F)">
-                      <span id="player-fullscreen-icon"></span>
+                </div>
+              </div>
+
+              <!-- Painel de Metadados e Abas da Aula -->
+              <div class="lesson-meta-card">
+                <div class="lesson-title-bar">
+                  <div class="lesson-info-group">
+                    <h2 id="current-lesson-title">Selecione uma aula</h2>
+                    <span id="current-course-title">Curso</span>
+                  </div>
+                  <div class="lesson-action-buttons">
+                    <button class="btn btn-primary" id="btn-complete-lesson">
+                      <span id="btn-complete-icon"></span>
+                      <span>Concluir Aula</span>
+                    </button>
+                    <button
+                      class="btn btn-secondary"
+                      id="btn-next-lesson"
+                      style="display: none"
+                    >
+                      <span>Próxima Aula</span>
+                      <span id="btn-next-icon"></span>
+                    </button>
+                    <button
+                      class="btn btn-danger-outline"
+                      id="btn-reset-course"
+                      title="Reiniciar progresso para 0%"
+                    >
+                      <span id="btn-reset-icon"></span>
+                      <span>Reiniciar Progresso</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Abas da Sala de Aula -->
+                <div class="classroom-tabs-nav">
+                  <button
+                    class="classroom-tab-btn active"
+                    data-classroom-tab="overview"
+                  >
+                    Visão Geral
+                  </button>
+                  <button
+                    class="classroom-tab-btn"
+                    data-classroom-tab="materials"
+                  >
+                    Materiais e Anexos
+                  </button>
+                  <button
+                    class="classroom-tab-btn"
+                    data-classroom-tab="certificate"
+                  >
+                    Certificação Oficial
+                  </button>
+                </div>
+
+                <!-- Conteúdo da Aba 1: Visão Geral -->
+                <div id="tab-content-overview" class="classroom-tab-pane">
+                  <p
+                    id="current-lesson-desc"
+                    style="
+                      color: var(--text-secondary);
+                      line-height: 1.6;
+                      font-size: 0.95rem;
+                    "
+                  >
+                    Acompanhe os módulos e aulas práticas para concluir sua
+                    trilha de aprendizagem.
+                  </p>
+                </div>
+
+                <!-- Conteúdo da Aba 2: Materiais e Anexos -->
+                <div
+                  id="tab-content-materials"
+                  class="classroom-tab-pane"
+                  style="display: none"
+                >
+                  <div class="materials-grid" id="classroom-materials-list">
+                    <span style="font-size: 0.85rem; color: var(--text-muted)"
+                      >Nenhum material anexo para esta aula.</span
+                    >
+                  </div>
+                </div>
+
+                <!-- Conteúdo da Aba 3: Certificação -->
+                <div
+                  id="tab-content-certificate"
+                  class="classroom-tab-pane"
+                  style="display: none"
+                >
+                  <div
+                    id="classroom-cert-status-box"
+                    style="
+                      padding: 1.5rem;
+                      background-color: var(--bg-page);
+                      border: 1px solid var(--border);
+                      border-radius: var(--radius-md);
+                      display: flex;
+                      flex-direction: column;
+                      gap: 1rem;
+                      align-items: flex-start;
+                    "
+                  >
+                    <h4
+                      style="
+                        font-size: 1.05rem;
+                        font-weight: 700;
+                        color: var(--text-primary);
+                      "
+                    >
+                      Emissão de Certificado de Conclusão
+                    </h4>
+                    <p
+                      id="cert-requirement-message"
+                      style="color: var(--text-secondary); font-size: 0.9rem"
+                    >
+                      Para obter o certificado oficial em PDF com código de
+                      verificação criptográfica, você deve completar 100% das
+                      aulas desta capacitação.
+                    </p>
+                    <button
+                      class="btn btn-success"
+                      id="btn-issue-certificate"
+                      style="display: none"
+                    >
+                      <span id="cert-btn-icon"></span>
+                      <span>Emitir Certificado Oficial (PDF)</span>
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Painel de Metadados e Abas da Aula -->
-            <div class="lesson-meta-card">
-              <div class="lesson-title-bar">
-                <div class="lesson-info-group">
-                  <h2 id="current-lesson-title">Selecione uma aula</h2>
-                  <span id="current-course-title">Curso</span>
+            <!-- Coluna Direita: Grade Curricular (Curriculum) -->
+            <div class="curriculum-column">
+              <div class="curriculum-card">
+                <div class="curriculum-card-header">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin-bottom: 0;">Conteúdo Programático</h3>
+                    <button class="btn btn-secondary btn-sm" id="btn-open-create-lesson" style="display: none;">
+                      + Nova Aula
+                    </button>
+                  </div>
+                  <div class="curriculum-progress-summary">
+                    <span id="curriculum-progress-text"
+                      >0 de 0 aulas concluídas</span
+                    >
+                    <strong
+                      id="curriculum-percent-text"
+                      style="color: var(--primary)"
+                      >0%</strong
+                    >
+                  </div>
+                  <div class="progress-track">
+                    <div
+                      class="progress-fill"
+                      id="curriculum-progress-fill"
+                      style="width: 0%"
+                    ></div>
+                  </div>
                 </div>
-                <div class="lesson-action-buttons">
-                  <button class="btn btn-primary" id="btn-complete-lesson">
-                    <span id="btn-complete-icon"></span>
-                    <span>Concluir Aula</span>
-                  </button>
-                  <button class="btn btn-secondary" id="btn-next-lesson" style="display: none;">
-                    <span>Próxima Aula</span>
-                    <span id="btn-next-icon"></span>
-                  </button>
-                  <button class="btn btn-danger-outline" id="btn-reset-course" title="Reiniciar progresso para 0%">
-                    <span id="btn-reset-icon"></span>
-                    <span>Reiniciar Progresso</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Abas da Sala de Aula -->
-              <div class="classroom-tabs-nav">
-                <button class="classroom-tab-btn active" data-classroom-tab="overview">Visão Geral</button>
-                <button class="classroom-tab-btn" data-classroom-tab="materials">Materiais e Anexos</button>
-                <button class="classroom-tab-btn" data-classroom-tab="certificate">Certificação Oficial</button>
-              </div>
-
-              <!-- Conteúdo da Aba 1: Visão Geral -->
-              <div id="tab-content-overview" class="classroom-tab-pane">
-                <p id="current-lesson-desc" style="color: var(--text-secondary); line-height: 1.6; font-size: 0.95rem;">
-                  Acompanhe os módulos e aulas práticas para concluir sua trilha de aprendizagem.
-                </p>
-              </div>
-
-              <!-- Conteúdo da Aba 2: Materiais e Anexos -->
-              <div id="tab-content-materials" class="classroom-tab-pane" style="display: none;">
-                <div class="materials-grid" id="classroom-materials-list">
-                  <span style="font-size: 0.85rem; color: var(--text-muted);">Nenhum material anexo para esta aula.</span>
-                </div>
-              </div>
-
-              <!-- Conteúdo da Aba 3: Certificação -->
-              <div id="tab-content-certificate" class="classroom-tab-pane" style="display: none;">
-                <div id="classroom-cert-status-box" style="padding: 1.5rem; background-color: var(--bg-page); border: 1px solid var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 1rem; align-items: flex-start;">
-                  <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">Emissão de Certificado de Conclusão</h4>
-                  <p id="cert-requirement-message" style="color: var(--text-secondary); font-size: 0.9rem;">
-                    Para obter o certificado oficial em PDF com código de verificação criptográfica, você deve completar 100% das aulas desta capacitação.
-                  </p>
-                  <button class="btn btn-success" id="btn-issue-certificate" style="display: none;">
-                    <span id="cert-btn-icon"></span>
-                    <span>Emitir Certificado Oficial (PDF)</span>
-                  </button>
-                </div>
+                <div
+                  class="curriculum-lesson-list"
+                  id="classroom-lessons-list"
+                ></div>
               </div>
             </div>
-
           </div>
+        </section>
 
-          <!-- Coluna Direita: Grade Curricular (Curriculum) -->
-          <div class="curriculum-column">
-            <div class="curriculum-card">
-              <div class="curriculum-card-header">
-                <h3>Conteúdo Programático</h3>
-                <div class="curriculum-progress-summary">
-                  <span id="curriculum-progress-text">0 de 0 aulas concluídas</span>
-                  <strong id="curriculum-percent-text" style="color: var(--primary);">0%</strong>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" id="curriculum-progress-fill" style="width: 0%;"></div>
-                </div>
-              </div>
-              <div class="curriculum-lesson-list" id="classroom-lessons-list"></div>
+        <!-- Visão 3: Validador Público de Certificados (Layout Oficial) -->
+        <section id="view-verify-cert" style="display: none">
+          <div class="verify-cert-container">
+            <button
+              class="btn btn-secondary"
+              id="btn-back-from-verify"
+              style="align-self: flex-start; margin-bottom: 0.5rem"
+            >
+              ← Voltar
+            </button>
+            <div class="verify-header-box">
+              <div class="verify-seal-icon" id="seal-icon-box"></div>
+              <h1>Portal Oficial de Autenticidade</h1>
+              <p>
+                Sistema corporativo de verificação e conformidade de
+                certificados de conclusão emitidos pela plataforma EduCore.
+              </p>
             </div>
-          </div>
 
+            <div class="verify-form-card">
+              <form id="form-verify-cert" style="display: flex; gap: 0.75rem">
+                <input
+                  type="text"
+                  id="input-cert-code"
+                  class="form-input"
+                  placeholder="Ex: EDU-3DCB2D-1DF6EE"
+                  style="
+                    flex: 1;
+                    text-transform: uppercase;
+                    font-family: monospace;
+                    font-size: 1rem;
+                    font-weight: 600;
+                  "
+                  required
+                />
+                <button type="submit" class="btn btn-primary">
+                  <span id="verify-submit-icon"></span>
+                  <span>Verificar Autenticidade</span>
+                </button>
+              </form>
+            </div>
+
+            <div id="cert-verification-result" style="display: none"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modais Acessíveis Corporativos -->
+
+    <!-- Modal Login -->
+    <div class="modal-backdrop" id="modal-login">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span id="modal-login-icon"></span>
+            <h3 class="modal-title">Acessar Conta</h3>
+          </div>
+          <button
+            class="modal-close-btn"
+            data-close-modal
+            id="btn-close-modal-login"
+          ></button>
         </div>
-      </section>
-
-      <!-- Visão 3: Validador Público de Certificados (Layout Oficial) -->
-      <section id="view-verify-cert" style="display: none;">
-        <div class="verify-cert-container">
-          <button class="btn btn-secondary" id="btn-back-from-verify" style="align-self: flex-start; margin-bottom: 0.5rem;">
-            ← Voltar
+        <form id="form-login" class="modal-body">
+          <div class="form-group">
+            <label class="form-label">E-mail Corporativo</label>
+            <input
+              type="email"
+              id="login-email"
+              class="form-input"
+              placeholder="seu.nome@empresa.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Senha</label>
+            <input
+              type="password"
+              id="login-password"
+              class="form-input"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 0.5rem; width: 100%"
+          >
+            Entrar no Sistema
           </button>
-          <div class="verify-header-box">
-            <div class="verify-seal-icon" id="seal-icon-box"></div>
-            <h1>Portal Oficial de Autenticidade</h1>
-            <p>Sistema corporativo de verificação e conformidade de certificados de conclusão emitidos pela plataforma EduCore.</p>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal Cadastro -->
+    <div class="modal-backdrop" id="modal-register">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span id="modal-reg-icon"></span>
+            <h3 class="modal-title">Criar Nova Conta</h3>
           </div>
-
-          <div class="verify-form-card">
-            <form id="form-verify-cert" style="display: flex; gap: 0.75rem;">
-              <input type="text" id="input-cert-code" class="form-input" placeholder="Ex: EDU-3DCB2D-1DF6EE" style="flex: 1; text-transform: uppercase; font-family: monospace; font-size: 1rem; font-weight: 600;" required>
-              <button type="submit" class="btn btn-primary">
-                <span id="verify-submit-icon"></span>
-                <span>Verificar Autenticidade</span>
-              </button>
-            </form>
+          <button
+            class="modal-close-btn"
+            data-close-modal
+            id="btn-close-modal-register"
+          ></button>
+        </div>
+        <form id="form-register" class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nome Completo</label>
+            <input
+              type="text"
+              id="reg-name"
+              class="form-input"
+              placeholder="Ex: Ana Silva"
+              required
+            />
           </div>
-
-          <div id="cert-verification-result" style="display: none;"></div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- Modais Acessíveis Corporativos -->
-
-  <!-- Modal Login -->
-  <div class="modal-backdrop" id="modal-login">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <span id="modal-login-icon"></span>
-          <h3 class="modal-title">Acessar Conta</h3>
-        </div>
-        <button class="modal-close-btn" data-close-modal id="btn-close-modal-login"></button>
+          <div class="form-group">
+            <label class="form-label">E-mail Corporativo</label>
+            <input
+              type="email"
+              id="reg-email"
+              class="form-input"
+              placeholder="ana.silva@empresa.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label"
+              >Senha de Acesso (mínimo 6 caracteres)</label
+            >
+            <input
+              type="password"
+              id="reg-password"
+              class="form-input"
+              placeholder="••••••••"
+              required
+              minlength="6"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 0.5rem; width: 100%"
+          >
+            Concluir Cadastro
+          </button>
+        </form>
       </div>
-      <form id="form-login" class="modal-body">
-        <div class="form-group">
-          <label class="form-label">E-mail Corporativo</label>
-          <input type="email" id="login-email" class="form-input" placeholder="seu.nome@empresa.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha</label>
-          <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">
-          Entrar no Sistema
-        </button>
-      </form>
     </div>
-  </div>
 
-  <!-- Modal Cadastro -->
-  <div class="modal-backdrop" id="modal-register">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <span id="modal-reg-icon"></span>
-          <h3 class="modal-title">Criar Nova Conta</h3>
+    <!-- Modal Criar Curso (Admin) -->
+    <div class="modal-backdrop" id="modal-create-course">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span id="modal-create-course-icon"></span>
+            <h3 class="modal-title">Novo Programa de Capacitação</h3>
+          </div>
+          <button
+            class="modal-close-btn"
+            data-close-modal
+            id="btn-close-modal-course"
+          ></button>
         </div>
-        <button class="modal-close-btn" data-close-modal id="btn-close-modal-register"></button>
+        <form id="form-create-course" class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Título da Capacitação</label>
+            <input
+              type="text"
+              id="course-title"
+              class="form-input"
+              placeholder="Ex: Segurança da Informação e LGPD"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição Executiva</label>
+            <textarea
+              id="course-desc"
+              class="form-input"
+              rows="3"
+              placeholder="Resumo dos objetivos e conteúdo a ser abordado..."
+              required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Carga Horária (horas)</label>
+            <input
+              type="number"
+              id="course-hours"
+              class="form-input"
+              value="10"
+              min="1"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 0.5rem; width: 100%"
+          >
+            Registrar Curso
+          </button>
+        </form>
       </div>
-      <form id="form-register" class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" id="reg-name" class="form-input" placeholder="Ex: Ana Silva" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">E-mail Corporativo</label>
-          <input type="email" id="reg-email" class="form-input" placeholder="ana.silva@empresa.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha de Acesso (mínimo 6 caracteres)</label>
-          <input type="password" id="reg-password" class="form-input" placeholder="••••••••" required minlength="6">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Perfil de Acesso</label>
-          <select id="reg-role" class="form-input">
-            <option value="student">Colaborador / Aluno</option>
-            <option value="admin">Gestor / Instrutor (Admin)</option>
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">
-          Concluir Cadastro
-        </button>
-      </form>
     </div>
-  </div>
 
-  <!-- Modal Criar Curso (Admin) -->
-  <div class="modal-backdrop" id="modal-create-course">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title-group">
-          <span id="modal-create-course-icon"></span>
-          <h3 class="modal-title">Novo Programa de Capacitação</h3>
+    <!-- Modal Cadastrar Usuário/Gestor (Admin) -->
+    <div class="modal-backdrop" id="modal-admin-create-user">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span id="modal-admin-user-icon"></span>
+            <h3 class="modal-title">Cadastrar Novo Usuário ou Gestor</h3>
+          </div>
+          <button
+            class="modal-close-btn"
+            data-close-modal
+            id="btn-close-modal-admin-user"
+          ></button>
         </div>
-        <button class="modal-close-btn" data-close-modal id="btn-close-modal-course"></button>
+        <form id="form-admin-create-user" class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Nome Completo</label>
+            <input
+              type="text"
+              id="admin-user-name"
+              class="form-input"
+              placeholder="Ex: Carlos Eduardo"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail Corporativo</label>
+            <input
+              type="email"
+              id="admin-user-email"
+              class="form-input"
+              placeholder="carlos.eduardo@empresa.com"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Senha Inicial (mínimo 6 caracteres)</label>
+            <input
+              type="password"
+              id="admin-user-password"
+              class="form-input"
+              placeholder="••••••••"
+              required
+              minlength="6"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Perfil de Acesso Corporativo</label>
+            <select id="admin-user-role" class="form-input">
+              <option value="student">Colaborador / Aluno</option>
+              <option value="admin">Gestor / Instrutor (Admin)</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 0.5rem; width: 100%"
+          >
+            Cadastrar Usuário
+          </button>
+        </form>
       </div>
-      <form id="form-create-course" class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Título da Capacitação</label>
-          <input type="text" id="course-title" class="form-input" placeholder="Ex: Segurança da Informação e LGPD" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Descrição Executiva</label>
-          <textarea id="course-desc" class="form-input" rows="3" placeholder="Resumo dos objetivos e conteúdo a ser abordado..." required></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Carga Horária (horas)</label>
-          <input type="number" id="course-hours" class="form-input" value="10" min="1" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem; width: 100%;">
-          Registrar Curso
-        </button>
-      </form>
     </div>
-  </div>
 
-  <!-- Container de Toasts de Notificação -->
-  <div class="toast-container" id="toast-container"></div>
+    <!-- Modal Criar Aula (Admin) -->
+    <div class="modal-backdrop" id="modal-create-lesson">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span id="modal-create-lesson-icon"></span>
+            <h3 class="modal-title">Adicionar Nova Aula</h3>
+          </div>
+          <button
+            class="modal-close-btn"
+            data-close-modal
+            id="btn-close-modal-lesson"
+          ></button>
+        </div>
+        <form id="form-create-lesson" class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Título da Aula</label>
+            <input
+              type="text"
+              id="lesson-title"
+              class="form-input"
+              placeholder="Ex: Fundamentos da Governança de Dados"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duração Estimada (minutos)</label>
+            <input
+              type="number"
+              id="lesson-duration"
+              class="form-input"
+              value="15"
+              min="1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição / Objetivos da Aula</label>
+            <textarea
+              id="lesson-description"
+              class="form-input"
+              rows="3"
+              placeholder="Resumo do conteúdo ministrado nesta aula..."
+            ></textarea>
+          </div>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            style="margin-top: 0.5rem; width: 100%"
+          >
+            Adicionar Aula ao Curso
+          </button>
+        </form>
+      </div>
+    </div>
 
-  <!-- Scripts ES6 Modulares -->
-  <script type="module" src="/js/app.js"></script>
-</body>
+    <!-- Container de Toasts de Notificação -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts ES6 Modulares -->
+    <script type="module" src="/js/app.js"></script>
+  </body>
 </html>

@@ -86,6 +86,9 @@ function injectStaticIcons() {
     "modal-login-icon": icons.user,
     "modal-reg-icon": icons.user,
     "modal-create-course-icon": icons.book,
+    "nav-icon-user-plus": icons.userPlus,
+    "modal-admin-user-icon": icons.userPlus,
+    "modal-create-lesson-icon": icons.book,
   };
 
   for (const [id, svg] of Object.entries(map)) {
@@ -161,9 +164,11 @@ function updateAdminUI() {
   const isAdmin = state.user?.role === "admin";
   const title = document.getElementById("admin-section-title");
   const nav = document.getElementById("admin-section-nav");
+  const btnCreateLesson = document.getElementById("btn-open-create-lesson");
 
   if (title) title.style.display = isAdmin ? "block" : "none";
   if (nav) nav.style.display = isAdmin ? "flex" : "none";
+  if (btnCreateLesson) btnCreateLesson.style.display = isAdmin ? "inline-flex" : "none";
 }
 
 async function handleLogout() {
@@ -274,6 +279,8 @@ function setupNavigation() {
   });
 
   document.getElementById("btn-open-create-course")?.addEventListener("click", () => openModal("modal-create-course"));
+  document.getElementById("btn-open-admin-create-user")?.addEventListener("click", () => openModal("modal-admin-create-user"));
+  document.getElementById("btn-open-create-lesson")?.addEventListener("click", () => openModal("modal-create-lesson"));
 }
 
 function setupAuthScreenControls() {
@@ -345,10 +352,9 @@ function setupAuthScreenControls() {
     const name = document.getElementById("auth-reg-name")?.value;
     const email = document.getElementById("auth-reg-email")?.value;
     const password = document.getElementById("auth-reg-password")?.value;
-    const role = document.getElementById("auth-reg-role")?.value;
 
     try {
-      await api.auth.register({ name, email, password, role });
+      await api.auth.register({ name, email, password });
       showToast("Cadastro realizado! Faça login para continuar.", "success");
       tabLogin?.click();
       const loginEmail = document.getElementById("auth-login-email");
@@ -845,6 +851,7 @@ function openClassroom() {
   document.getElementById("breadcrumb-course-title").textContent = state.currentCourse.title;
   document.getElementById("current-course-title").textContent = state.currentCourse.title;
 
+  updateAdminUI();
   renderClassroomCurriculum();
   updateClassroomProgress();
   updateClassroomCourseBadge();
@@ -863,24 +870,34 @@ function updateClassroomCourseBadge() {
   const container = document.getElementById("classroom-course-badge-container");
   if (!container) return;
 
+  const badges = [];
+
+  if (state.user?.role === "admin") {
+    badges.push(`
+      <span class="classroom-header-badge" style="background-color: var(--bg-surface-hover); color: var(--text-primary); border: 1px solid var(--border);">
+        <span>Modo Gestor / Instrutor</span>
+      </span>
+    `);
+  }
+
   const isCompleted = isCourseCompleted(state.currentEnrollment);
   if (isCompleted) {
-    container.innerHTML = `
+    badges.push(`
       <span class="classroom-header-badge completed">
         ${icons.checkCircle}
         <span>Concluído</span>
       </span>
-    `;
+    `);
   } else if (state.currentEnrollment) {
     const percent = Math.round(state.currentEnrollment.progress_percent || 0);
-    container.innerHTML = `
+    badges.push(`
       <span class="classroom-header-badge in-progress">
         <span>Em andamento (${percent}%)</span>
       </span>
-    `;
-  } else {
-    container.innerHTML = "";
+    `);
   }
+
+  container.innerHTML = badges.join("");
 }
 
 function updateClassroomProgress() {
@@ -907,6 +924,8 @@ function renderClassroomCurriculum() {
     return;
   }
 
+  const isAdmin = state.user?.role === "admin";
+
   container.innerHTML = state.currentLessons
     .map((lesson) => {
       const isCompleted = !!lesson.is_completed;
@@ -920,13 +939,22 @@ function renderClassroomCurriculum() {
 
       const durationText = lesson.duration_seconds > 0 ? `${Math.round(lesson.duration_seconds / 60)} min` : "";
 
+      const deleteBtnHtml = isAdmin
+        ? `<button class="btn-delete-lesson" data-delete-lesson-id="${lesson.id}" title="Excluir aula">
+             ${icons.trash}
+           </button>`
+        : "";
+
       return `
         <div class="curriculum-lesson-item ${isActive ? "active" : ""}" data-lesson-id="${lesson.id}">
           <div class="curriculum-lesson-info">
             <span class="curriculum-status-icon ${statusClass}">${statusIcon}</span>
             <span class="curriculum-lesson-title">${lesson.order_index}. ${lesson.title}</span>
           </div>
-          <span class="curriculum-lesson-duration">${durationText}</span>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="curriculum-lesson-duration">${durationText}</span>
+            ${deleteBtnHtml}
+          </div>
         </div>
       `;
     })
@@ -939,6 +967,35 @@ function renderClassroomCurriculum() {
       if (target) selectLesson(target);
     });
   });
+
+  if (isAdmin) {
+    container.querySelectorAll(".btn-delete-lesson").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const lessonId = Number(btn.getAttribute("data-delete-lesson-id"));
+        if (!confirm("Tem certeza que deseja excluir esta aula?")) return;
+        try {
+          await api.lessons.delete(lessonId);
+          showToast("Aula excluída com sucesso", "success");
+          state.currentLessons = state.currentLessons.filter((l) => l.id !== lessonId);
+          if (state.activeLesson?.id === lessonId) {
+            state.activeLesson = state.currentLessons[0] || null;
+          }
+          renderClassroomCurriculum();
+          updateClassroomProgress();
+          if (state.activeLesson) {
+            selectLesson(state.activeLesson);
+          } else {
+            document.getElementById("current-lesson-title").textContent = "Nenhuma aula cadastrada";
+            document.getElementById("current-lesson-desc").textContent = "";
+            if (state.player) state.player.loadSource("");
+          }
+        } catch (err) {
+          showToast(err.message, "error");
+        }
+      });
+    });
+  }
 }
 
 function selectLesson(lesson) {
@@ -1060,13 +1117,29 @@ function setupForms() {
     const name = document.getElementById("reg-name").value;
     const email = document.getElementById("reg-email").value;
     const password = document.getElementById("reg-password").value;
-    const role = document.getElementById("reg-role").value;
 
     try {
-      await api.auth.register({ name, email, password, role });
+      await api.auth.register({ name, email, password });
       showToast("Cadastro realizado! Faça login para continuar.", "success");
       closeModal("modal-register");
       openModal("modal-login");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  document.getElementById("form-admin-create-user")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = document.getElementById("admin-user-name").value;
+    const email = document.getElementById("admin-user-email").value;
+    const password = document.getElementById("admin-user-password").value;
+    const role = document.getElementById("admin-user-role").value;
+
+    try {
+      await api.admin.createUser({ name, email, password, role });
+      showToast(`Usuário ${name} cadastrado com sucesso!`, "success");
+      closeModal("modal-admin-create-user");
+      document.getElementById("form-admin-create-user").reset();
     } catch (err) {
       showToast(err.message, "error");
     }
@@ -1084,6 +1157,35 @@ function setupForms() {
       closeModal("modal-create-course");
       document.getElementById("form-create-course").reset();
       await loadCourses();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+
+  document.getElementById("form-create-lesson")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!state.currentCourse) return;
+
+    const title = document.getElementById("lesson-title").value.trim();
+    const durationMinutes = parseInt(document.getElementById("lesson-duration").value, 10) || 15;
+    const description = document.getElementById("lesson-description").value.trim();
+
+    try {
+      const res = await api.lessons.create(state.currentCourse.id, {
+        title,
+        durationSeconds: durationMinutes * 60,
+      });
+
+      showToast("Aula adicionada com sucesso!", "success");
+      closeModal("modal-create-lesson");
+      document.getElementById("form-create-lesson").reset();
+
+      state.currentLessons.push(res.lesson);
+      renderClassroomCurriculum();
+      updateClassroomProgress();
+      if (!state.activeLesson) {
+        selectLesson(res.lesson);
+      }
     } catch (err) {
       showToast(err.message, "error");
     }

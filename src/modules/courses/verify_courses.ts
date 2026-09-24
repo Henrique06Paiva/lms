@@ -32,9 +32,10 @@ async function runCoursesTests() {
         name: "Admin User",
         email: "admin@coursetest.com",
         password: "adminPassword123",
-        role: "admin",
       }),
     });
+    // Eleva explicitamente para admin no banco de testes (pois cadastro público gera student)
+    db.prepare("UPDATE users SET role = 'admin' WHERE email = 'admin@coursetest.com'").run();
 
     await fetch(`${BASE_URL}/api/auth/register`, {
       method: "POST",
