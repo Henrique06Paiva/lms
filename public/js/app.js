@@ -3,7 +3,6 @@ import { icons } from "./icons.js";
 import { showToast, openModal, closeModal, initGlobalModals, initTheme } from "./ui.js";
 import { CustomVideoPlayer } from "./player.js";
 
-// Estado Global da Aplicação
 const state = {
   user: null,
   courses: [],
@@ -37,10 +36,6 @@ function syncCourseProgress(courseId, enrollment) {
     course.completed_at = enrollment.completed_at;
   }
 }
-
-// ==============================================================================
-// 1. Inicialização
-// ==============================================================================
 
 async function init() {
   initTheme();
@@ -99,10 +94,6 @@ function injectStaticIcons() {
   }
 }
 
-// ==============================================================================
-// 2. Autenticação & Navbar Corporativa
-// ==============================================================================
-
 async function checkAuth() {
   try {
     const data = await api.auth.me();
@@ -121,12 +112,8 @@ function updateAuthLayout() {
   const search = document.getElementById("global-search-container");
   const isAuthenticated = !!state.user;
 
-  if (sidebar) {
-    sidebar.style.display = isAuthenticated ? "flex" : "none";
-  }
-  if (search) {
-    search.style.display = isAuthenticated ? "flex" : "none";
-  }
+  if (sidebar) sidebar.style.display = isAuthenticated ? "flex" : "none";
+  if (search) search.style.display = isAuthenticated ? "flex" : "none";
 }
 
 function getInitials(name) {
@@ -142,23 +129,19 @@ function renderNavActions() {
 
   if (state.user) {
     const initials = getInitials(state.user.name);
-    const roleLabel = state.user.role === "admin" ? "ADMIN" : "ALUNO";
+    const roleLabel = state.user.role === "admin" ? "Admin" : "Aluno";
 
     container.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 0.65rem; background-color: var(--bg-surface); border: 1px solid var(--border); padding: 0.3rem 0.65rem; border-radius: var(--radius-pill);">
-        <div style="width: 26px; height: 26px; border-radius: 50%; background-color: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700;">
+      <div style="display: flex; align-items: center; gap: 0.55rem; background-color: var(--bg-surface); border: 1px solid var(--border); padding: 0.25rem 0.55rem; border-radius: var(--radius-pill);">
+        <div style="width: 24px; height: 24px; border-radius: 50%; background-color: var(--primary); color: var(--bg-surface); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700;">
           ${initials}
         </div>
         <div style="display: flex; flex-direction: column;">
-          <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); line-height: 1.1;">
-            ${state.user.name}
-          </span>
-          <span style="font-size: 0.65rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">
-            ${roleLabel}
-          </span>
+          <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-primary); line-height: 1.1;">${state.user.name}</span>
+          <span style="font-size: 0.62rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase;">${roleLabel}</span>
         </div>
       </div>
-      <button class="btn btn-secondary" id="btn-logout" title="Encerrar Sessão" style="padding: 0.4rem 0.65rem;">
+      <button class="btn btn-secondary" id="btn-logout" title="Sair" style="padding: 0.35rem 0.55rem;">
         ${icons.logout}
       </button>
     `;
@@ -166,11 +149,10 @@ function renderNavActions() {
     document.getElementById("btn-logout")?.addEventListener("click", handleLogout);
   } else {
     container.innerHTML = `
-      <button class="btn btn-primary" id="btn-nav-go-login" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;">
-        Acessar Conta
+      <button class="btn btn-primary" id="btn-nav-go-login" style="padding: 0.4rem 0.75rem; font-size: 0.82rem;">
+        Entrar
       </button>
     `;
-
     document.getElementById("btn-nav-go-login")?.addEventListener("click", () => switchView("auth"));
   }
 }
@@ -189,7 +171,7 @@ async function handleLogout() {
     await api.auth.logout();
     state.user = null;
     state.courses = [];
-    showToast("Sessão encerrada com sucesso.", "info");
+    showToast("Sessão encerrada.", "info");
     renderNavActions();
     updateAdminUI();
     updateAuthLayout();
@@ -217,9 +199,7 @@ function updateKPIs() {
   const completed = enrolled.filter((c) => isCourseCompleted(c));
 
   let totalPercent = 0;
-  enrolled.forEach((c) => {
-    totalPercent += c.progress_percent || 0;
-  });
+  enrolled.forEach((c) => { totalPercent += c.progress_percent || 0; });
   const avgPercent = enrolledCount > 0 ? Math.round(totalPercent / enrolledCount) : 0;
 
   if (enrolledCountEl) enrolledCountEl.textContent = String(enrolledCount);
@@ -227,12 +207,7 @@ function updateKPIs() {
   if (certsCountEl) certsCountEl.textContent = String(completed.length);
 }
 
-// ==============================================================================
-// 3. Navegação & Roteamento de Visões
-// ==============================================================================
-
 function switchView(viewName) {
-  // Gating corporativo: se não autenticado e tentar acessar áreas privadas, força tela de login
   if (!state.user && viewName !== "verify-cert") {
     viewName = "auth";
   }
@@ -272,10 +247,7 @@ function setupNavigation() {
   });
 
   document.getElementById("nav-courses")?.addEventListener("click", async () => {
-    if (!state.user) {
-      switchView("auth");
-      return;
-    }
+    if (!state.user) { switchView("auth"); return; }
     state.activeFilter = "all";
     updateCatalogFilterButtons();
     switchView("courses");
@@ -284,7 +256,7 @@ function setupNavigation() {
 
   document.getElementById("nav-my-courses")?.addEventListener("click", async () => {
     if (!state.user) {
-      showToast("Faça login com sua conta para acessar seus cursos", "warning");
+      showToast("Faça login para acessar seus cursos", "warning");
       switchView("auth");
       return;
     }
@@ -294,23 +266,15 @@ function setupNavigation() {
     await loadCourses();
   });
 
-  document.getElementById("nav-verify-cert")?.addEventListener("click", () => {
-    switchView("verify-cert");
-  });
+  document.getElementById("nav-verify-cert")?.addEventListener("click", () => switchView("verify-cert"));
 
   document.getElementById("btn-back-to-courses")?.addEventListener("click", async () => {
     switchView("courses");
     await loadCourses();
   });
 
-  document.getElementById("btn-open-create-course")?.addEventListener("click", () => {
-    openModal("modal-create-course");
-  });
+  document.getElementById("btn-open-create-course")?.addEventListener("click", () => openModal("modal-create-course"));
 }
-
-// ==============================================================================
-// 4. Tela Dedicada de Autenticação Corporativa (view-auth)
-// ==============================================================================
 
 function setupAuthScreenControls() {
   const tabLogin = document.getElementById("auth-tab-login");
@@ -332,7 +296,6 @@ function setupAuthScreenControls() {
     if (formLogin) formLogin.style.display = "none";
   });
 
-  // Botões de Demonstração Rápida
   document.getElementById("btn-fill-admin")?.addEventListener("click", () => {
     tabLogin?.click();
     const emailInput = document.getElementById("auth-login-email");
@@ -351,21 +314,12 @@ function setupAuthScreenControls() {
     showToast("Credenciais de Aluno preenchidas!", "info");
   });
 
-  // Link para validador público de certificados
-  document.getElementById("btn-auth-to-verify")?.addEventListener("click", () => {
-    switchView("verify-cert");
-  });
+  document.getElementById("btn-auth-to-verify")?.addEventListener("click", () => switchView("verify-cert"));
 
-  // Botão de retorno do validador público
   document.getElementById("btn-back-from-verify")?.addEventListener("click", () => {
-    if (state.user) {
-      switchView("courses");
-    } else {
-      switchView("auth");
-    }
+    switchView(state.user ? "courses" : "auth");
   });
 
-  // Submissão do login dedicado
   formLogin?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("auth-login-email")?.value;
@@ -374,7 +328,7 @@ function setupAuthScreenControls() {
     try {
       const data = await api.auth.login({ email, password });
       state.user = data.user;
-      showToast(`Bem-vindo(a) ao EduCore, ${data.user.name}!`, "success");
+      showToast(`Bem-vindo(a), ${data.user.name}!`, "success");
       renderNavActions();
       updateAdminUI();
       updateAuthLayout();
@@ -386,7 +340,6 @@ function setupAuthScreenControls() {
     }
   });
 
-  // Submissão do cadastro dedicado
   formRegister?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("auth-reg-name")?.value;
@@ -396,7 +349,7 @@ function setupAuthScreenControls() {
 
     try {
       await api.auth.register({ name, email, password, role });
-      showToast("Cadastro realizado com sucesso! Faça login para continuar.", "success");
+      showToast("Cadastro realizado! Faça login para continuar.", "success");
       tabLogin?.click();
       const loginEmail = document.getElementById("auth-login-email");
       const loginPass = document.getElementById("auth-login-password");
@@ -408,12 +361,7 @@ function setupAuthScreenControls() {
   });
 }
 
-// ==============================================================================
-// 5. Catálogo & Dashboard de Cursos
-// ==============================================================================
-
 function setupCatalogControls() {
-  // Busca global
   const searchInput = document.getElementById("global-search-input");
   if (searchInput) {
     searchInput.addEventListener("input", (e) => {
@@ -422,7 +370,6 @@ function setupCatalogControls() {
     });
   }
 
-  // Filtros de status (Todos os Cursos, Meus Cursos, Em Andamento, Concluídos)
   document.querySelectorAll(".catalog-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
       state.activeFilter = tab.getAttribute("data-filter") || "all";
@@ -431,7 +378,6 @@ function setupCatalogControls() {
     });
   });
 
-  // Alternador de Visualização (Grade de Fichas Técnicas vs Tabela Executiva)
   const btnGrid = document.getElementById("btn-view-grid");
   const btnList = document.getElementById("btn-view-list");
 
@@ -464,11 +410,7 @@ function setupCatalogControls() {
 
 function updateCatalogFilterButtons() {
   document.querySelectorAll(".catalog-tab").forEach((tab) => {
-    if (tab.getAttribute("data-filter") === state.activeFilter) {
-      tab.classList.add("active");
-    } else {
-      tab.classList.remove("active");
-    }
+    tab.classList.toggle("active", tab.getAttribute("data-filter") === state.activeFilter);
   });
 
   document.querySelectorAll(".sidebar-nav-item").forEach((el) => el.classList.remove("active"));
@@ -482,7 +424,7 @@ function updateCatalogFilterButtons() {
 async function loadCourses() {
   const grid = document.getElementById("course-grid");
   if (grid && state.courses.length === 0) {
-    grid.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem 0;">Carregando trilhas de capacitação...</p>`;
+    grid.innerHTML = `<p style="color: var(--text-muted); padding: 1.5rem 0;">Carregando cursos...</p>`;
   }
 
   try {
@@ -503,7 +445,6 @@ function renderCoursesGrid() {
 
   let list = [...state.courses];
 
-  // Filtros avançados
   if (state.activeFilter === "my-courses") {
     list = list.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined);
   } else if (state.activeFilter === "in-progress") {
@@ -512,7 +453,6 @@ function renderCoursesGrid() {
     list = list.filter((c) => c.enrollment_id !== null && c.enrollment_id !== undefined && isCourseCompleted(c));
   }
 
-  // Filtro por busca
   if (state.searchQuery) {
     list = list.filter(
       (c) =>
@@ -523,11 +463,11 @@ function renderCoursesGrid() {
 
   if (list.length === 0) {
     grid.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1rem; width: 100%; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; gap: 0.75rem;">
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; width: 100%; border: 1px dashed var(--border); border-radius: var(--radius-lg); text-align: center; gap: 0.65rem;">
         <span style="color: var(--text-muted);">${icons.book}</span>
-        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-weight: 600;">Nenhum programa de capacitação encontrado</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px;">
-          Não há registros correspondentes ao filtro ativo ou termo pesquisado.
+        <h3 style="font-size: 1rem; color: var(--text-primary); font-weight: 600;">Nenhum curso encontrado</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 360px;">
+          Não há registros para o filtro ou termo pesquisado.
         </p>
       </div>
     `;
@@ -535,27 +475,26 @@ function renderCoursesGrid() {
   }
 
   const categoryTaxonomy = [
-    { cat: "SEGURANÇA & CONFORMIDADE", prefix: "SEC" },
-    { cat: "ARQUITETURA & DEVSECOPS", prefix: "ARC" },
-    { cat: "GOVERNANÇA & RISCOS", prefix: "GOV" },
-    { cat: "ENGENHARIA DE DADOS", prefix: "DAT" },
-    { cat: "LIDERANÇA CORPORATIVA", prefix: "LDR" }
+    { cat: "Segurança & Conformidade", prefix: "SEC" },
+    { cat: "Arquitetura & DevSecOps", prefix: "ARC" },
+    { cat: "Governança & Riscos", prefix: "GOV" },
+    { cat: "Engenharia de Dados", prefix: "DAT" },
+    { cat: "Liderança Corporativa", prefix: "LDR" }
   ];
 
-  // 1. Visão em Tabela Executiva
   if (state.viewMode === "list") {
     grid.innerHTML = `
       <div class="executive-table-container">
         <table class="executive-table">
           <thead>
             <tr>
-              <th style="width: 140px;">CÓDIGO</th>
-              <th>PROGRAMA DE CAPACITAÇÃO</th>
-              <th style="width: 100px; text-align: center;">CARGA</th>
-              <th style="width: 100px; text-align: center;">AULAS</th>
-              <th style="width: 150px;">STATUS</th>
-              <th style="width: 180px;">PROGRESSO</th>
-              <th style="width: 170px; text-align: right;">AÇÃO</th>
+              <th style="width: 130px;">Código</th>
+              <th>Curso</th>
+              <th style="width: 90px; text-align: center;">Carga</th>
+              <th style="width: 90px; text-align: center;">Aulas</th>
+              <th style="width: 140px;">Status</th>
+              <th style="width: 160px;">Progresso</th>
+              <th style="width: 160px; text-align: right;">Ação</th>
             </tr>
           </thead>
           <tbody>
@@ -563,30 +502,24 @@ function renderCoursesGrid() {
               const isEnrolled = c.enrollment_id !== null && c.enrollment_id !== undefined;
               const isCompleted = isCourseCompleted(c);
               const percent = c.progress_percent !== null && c.progress_percent !== undefined
-                ? Math.round(c.progress_percent)
-                : 0;
+                ? Math.round(c.progress_percent) : 0;
               const tax = categoryTaxonomy[c.id % categoryTaxonomy.length];
-              const code = `TRK-${tax.prefix}-${String(c.id).padStart(3, "0")}`;
+              const code = `${tax.prefix}-${String(c.id).padStart(3, "0")}`;
 
               let statusClass = "available";
               let statusLabel = "Disponível";
-              if (isCompleted) {
-                statusClass = "completed";
-                statusLabel = "Concluído";
-              } else if (isEnrolled) {
-                statusClass = "in-progress";
-                statusLabel = "Em Andamento";
-              }
+              if (isCompleted) { statusClass = "completed"; statusLabel = "Concluído"; }
+              else if (isEnrolled) { statusClass = "in-progress"; statusLabel = "Em andamento"; }
 
               return `
                 <tr class="executive-table-row" data-slug="${c.slug}">
                   <td><span class="table-code">${code}</span></td>
                   <td>
                     <div class="table-course-title">${c.title}</div>
-                    <div class="table-course-desc">${c.description || "Capacitação corporativa especializada de alta eficiência."}</div>
+                    <div class="table-course-desc">${c.description || ""}</div>
                   </td>
-                  <td style="text-align: center; font-family: ui-monospace, monospace; font-weight: 600;">${c.workload_hours}h</td>
-                  <td style="text-align: center; font-family: ui-monospace, monospace; font-weight: 600;">${c.total_lessons || 0}</td>
+                  <td style="text-align: center; font-weight: 600;">${c.workload_hours}h</td>
+                  <td style="text-align: center; font-weight: 600;">${c.total_lessons || 0}</td>
                   <td>
                     <span class="dossier-status-pill ${statusClass}">
                       <span class="status-dot ${statusClass}"></span>
@@ -595,19 +528,16 @@ function renderCoursesGrid() {
                   </td>
                   <td>
                     ${isEnrolled ? `
-                      <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-family: ui-monospace, monospace;">
-                          <span>${percent}%</span>
-                          <span style="color: ${isCompleted ? "var(--success)" : "var(--primary)"};">${isCompleted ? "100%" : `${percent}%`}</span>
-                        </div>
-                        <div class="progress-track" style="height: 5px;">
+                      <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">${percent}%</span>
+                        <div class="progress-track" style="height: 4px;">
                           <div class="progress-fill ${isCompleted ? "completed" : ""}" style="width: ${percent}%;"></div>
                         </div>
                       </div>
-                    ` : `<span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">Disponível</span>`}
+                    ` : `<span style="font-size: 0.72rem; color: var(--text-muted);">—</span>`}
                   </td>
                   <td style="text-align: right;">
-                    <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; white-space: nowrap;">
+                    <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} btn-enter-course" data-slug="${c.slug}" style="padding: 0.3rem 0.65rem; font-size: 0.78rem;">
                       ${isCompleted ? `${icons.award} Certificado` : isEnrolled ? "Continuar ›" : "Iniciar ›"}
                     </button>
                   </td>
@@ -636,26 +566,19 @@ function renderCoursesGrid() {
     return;
   }
 
-  // 2. Visão em Grade de Fichas Técnicas (Technical Dossiers)
   grid.innerHTML = list
     .map((c) => {
       const isEnrolled = c.enrollment_id !== null && c.enrollment_id !== undefined;
       const isCompleted = isCourseCompleted(c);
       const percent = c.progress_percent !== null && c.progress_percent !== undefined
-        ? Math.round(c.progress_percent)
-        : 0;
+        ? Math.round(c.progress_percent) : 0;
       const tax = categoryTaxonomy[c.id % categoryTaxonomy.length];
-      const code = `TRK-${tax.prefix}-${String(c.id).padStart(3, "0")}`;
+      const code = `${tax.prefix}-${String(c.id).padStart(3, "0")}`;
 
       let statusClass = "available";
       let statusLabel = "Disponível";
-      if (isCompleted) {
-        statusClass = "completed";
-        statusLabel = "Concluído";
-      } else if (isEnrolled) {
-        statusClass = "in-progress";
-        statusLabel = "Em Andamento";
-      }
+      if (isCompleted) { statusClass = "completed"; statusLabel = "Concluído"; }
+      else if (isEnrolled) { statusClass = "in-progress"; statusLabel = "Em andamento"; }
 
       return `
         <div class="course-card" data-slug="${c.slug}">
@@ -672,43 +595,39 @@ function renderCoursesGrid() {
 
           <div class="dossier-body">
             <h3 class="dossier-title">${c.title}</h3>
-            <p class="dossier-desc">${c.description || "Capacitação corporativa especializada com metodologia prática e certificação de conformidade."}</p>
-            
+            <p class="dossier-desc">${c.description || "Curso de capacitação profissional."}</p>
+
             <div class="dossier-specs-grid">
               <div class="dossier-spec-item">
                 <span class="dossier-spec-label">Carga</span>
                 <span class="dossier-spec-value">${c.workload_hours}h</span>
               </div>
               <div class="dossier-spec-item">
-                <span class="dossier-spec-label">Módulos</span>
-                <span class="dossier-spec-value">${c.total_lessons || 0} aulas</span>
+                <span class="dossier-spec-label">Aulas</span>
+                <span class="dossier-spec-value">${c.total_lessons || 0}</span>
               </div>
               <div class="dossier-spec-item">
-                <span class="dossier-spec-label">Validação</span>
-                <span class="dossier-spec-value">Certificado</span>
+                <span class="dossier-spec-label">Certificado</span>
+                <span class="dossier-spec-value">Sim</span>
               </div>
             </div>
 
-            ${
-              isEnrolled
-                ? `
-                <div class="dossier-progress">
-                  <div class="dossier-progress-top">
-                    <span>Evolução da Trilha</span>
-                    <strong class="dossier-progress-pct" style="color: ${isCompleted ? "var(--success)" : "var(--primary)"};">${percent}%</strong>
-                  </div>
-                  <div class="progress-track">
-                    <div class="progress-fill ${isCompleted ? "completed" : ""}" style="width: ${percent}%;"></div>
-                  </div>
+            ${isEnrolled ? `
+              <div class="dossier-progress">
+                <div class="dossier-progress-top">
+                  <span>Progresso</span>
+                  <strong class="dossier-progress-pct" style="color: ${isCompleted ? "var(--success)" : "var(--text-secondary)"};">${percent}%</strong>
                 </div>
-              `
-                : ""
-            }
+                <div class="progress-track">
+                  <div class="progress-fill ${isCompleted ? "completed" : ""}" style="width: ${percent}%;"></div>
+                </div>
+              </div>
+            ` : ""}
           </div>
 
           <div class="dossier-footer">
             <button class="btn ${isCompleted ? "btn-success" : isEnrolled ? "btn-secondary" : "btn-primary"} dossier-action-btn btn-enter-course" data-slug="${c.slug}">
-              ${isCompleted ? `${icons.award} Certificado Emitido` : isEnrolled ? "Continuar Trilha ›" : "Iniciar Capacitação ›"}
+              ${isCompleted ? `${icons.award} Certificado` : isEnrolled ? "Continuar ›" : "Iniciar ›"}
             </button>
           </div>
         </div>
@@ -734,7 +653,7 @@ function renderCoursesGrid() {
 
 async function handleOpenCourse(slug) {
   if (!state.user) {
-    showToast("Faça login com sua conta para acessar esta capacitação", "warning");
+    showToast("Faça login para acessar este curso", "warning");
     switchView("auth");
     return;
   }
@@ -749,7 +668,7 @@ async function handleOpenCourse(slug) {
       const enrollRes = await api.courses.enroll(data.course.id);
       state.currentEnrollment = enrollRes.enrollment;
       syncCourseProgress(data.course.id, enrollRes.enrollment);
-      showToast("Matrícula realizada com sucesso!", "success");
+      showToast("Matrícula realizada!", "success");
       await loadCourses();
     } else {
       syncCourseProgress(data.course.id, data.enrollment);
@@ -761,36 +680,23 @@ async function handleOpenCourse(slug) {
   }
 }
 
-// ==============================================================================
-// 6. Sala de Aula & Player Customizado
-// ==============================================================================
-
 function setupClassroomControls() {
-  // Abas da sala de aula
   document.querySelectorAll(".classroom-tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const tab = btn.getAttribute("data-classroom-tab") || "overview";
-      switchClassroomTab(tab);
+      switchClassroomTab(btn.getAttribute("data-classroom-tab") || "overview");
     });
   });
 
-  // Concluir Aula
   document.getElementById("btn-complete-lesson")?.addEventListener("click", async () => {
     if (!state.activeLesson) return;
     try {
       const res = await api.lessons.complete(state.activeLesson.id);
       state.currentEnrollment = res.enrollment;
       state.activeLesson.is_completed = 1;
-
-      // Sincroniza imediatamente o curso na lista em memória
       syncCourseProgress(state.currentCourse.id, res.enrollment);
 
       const isCompleted = isCourseCompleted(res.enrollment);
-      if (isCompleted) {
-        showToast("🎉 Parabéns! Você concluiu todas as aulas desta capacitação!", "success");
-      } else {
-        showToast(`Aula marcada como concluída!`, "success");
-      }
+      showToast(isCompleted ? "🎉 Parabéns! Curso concluído!" : "Aula concluída!", "success");
 
       renderClassroomCurriculum();
       updateClassroomProgress();
@@ -803,7 +709,6 @@ function setupClassroomControls() {
     }
   });
 
-  // Próxima Aula
   document.getElementById("btn-next-lesson")?.addEventListener("click", () => {
     if (!state.activeLesson || !state.currentLessons) return;
     const currentIndex = state.currentLessons.findIndex((l) => l.id === state.activeLesson.id);
@@ -812,20 +717,17 @@ function setupClassroomControls() {
     }
   });
 
-  // Resetar Curso
   document.getElementById("btn-reset-course")?.addEventListener("click", async () => {
     if (!state.currentCourse) return;
-    if (!confirm("Atenção: Deseja realmente reiniciar seu progresso neste curso para 0%?")) return;
+    if (!confirm("Deseja reiniciar seu progresso neste curso?")) return;
 
     try {
       const res = await api.courses.resetProgress(state.currentCourse.id);
       state.currentEnrollment = res.enrollment;
       state.currentLessons.forEach((l) => (l.is_completed = 0));
-
-      // Sincroniza reset no curso na lista em memória
       syncCourseProgress(state.currentCourse.id, res.enrollment);
 
-      showToast("Progresso reiniciado para 0%", "info");
+      showToast("Progresso reiniciado para 0%.", "info");
       renderClassroomCurriculum();
       updateClassroomProgress();
       updateClassroomCourseBadge();
@@ -837,13 +739,12 @@ function setupClassroomControls() {
     }
   });
 
-  // Emitir Certificado
   document.getElementById("btn-issue-certificate")?.addEventListener("click", async () => {
     if (!state.currentCourse) return;
     try {
-      showToast("Gerando certificado em PDF com assinatura e hash criptográfico...", "info");
+      showToast("Gerando certificado...", "info");
       const res = await api.certificates.issue(state.currentCourse.id);
-      showToast("Certificado corporativo emitido com sucesso!", "success");
+      showToast("Certificado emitido com sucesso!", "success");
       window.open(`/api/certificates/${res.certificate.code}/download`, "_blank");
       updateCertificateStatus();
     } catch (err) {
@@ -851,7 +752,6 @@ function setupClassroomControls() {
     }
   });
 
-  // Formulário do Validador de Certificados
   document.getElementById("form-verify-cert")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const code = document.getElementById("input-cert-code").value.trim().toUpperCase();
@@ -866,8 +766,8 @@ function setupClassroomControls() {
         <div class="verify-result-official">
           <div class="official-header">
             <div style="display: flex; flex-direction: column;">
-              <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">Autoridade Certificadora</span>
-              <strong style="font-size: 1.15rem; color: var(--text-primary);">EduCore LMS & Compliance Authority</strong>
+              <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-weight: 600;">Autoridade Certificadora</span>
+              <strong style="font-size: 1rem; color: var(--text-primary);">EduCore LMS</strong>
             </div>
             <span class="official-badge-status">
               ${icons.checkCircle}
@@ -877,31 +777,31 @@ function setupClassroomControls() {
 
           <div class="official-data-grid">
             <div class="official-field">
-              <span class="official-field-label">Aluno Titular</span>
+              <span class="official-field-label">Aluno</span>
               <span class="official-field-val">${cert.studentName}</span>
             </div>
             <div class="official-field">
-              <span class="official-field-label">Código de Autenticidade</span>
-              <span class="official-field-val" style="font-family: monospace; color: var(--primary);">${cert.code}</span>
+              <span class="official-field-label">Código</span>
+              <span class="official-field-val" style="font-family: monospace;">${cert.code}</span>
             </div>
             <div class="official-field">
-              <span class="official-field-label">Programa / Capacitação</span>
+              <span class="official-field-label">Curso</span>
               <span class="official-field-val">${cert.courseTitle}</span>
             </div>
             <div class="official-field">
-              <span class="official-field-label">Carga Horária Reconhecida</span>
-              <span class="official-field-val">${cert.workloadHours} horas de formação</span>
+              <span class="official-field-label">Carga Horária</span>
+              <span class="official-field-val">${cert.workloadHours}h</span>
             </div>
             <div class="official-field">
-              <span class="official-field-label">Data de Conclusão / Emissão</span>
+              <span class="official-field-label">Data de Emissão</span>
               <span class="official-field-val">${new Date(cert.issuedAt).toLocaleDateString("pt-BR")}</span>
             </div>
           </div>
 
-          <div style="display: flex; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--border);">
-            <a href="${cert.downloadUrl}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+          <div style="display: flex; justify-content: flex-end; padding-top: 0.85rem; border-top: 1px solid var(--border);">
+            <a href="${cert.downloadUrl}" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.4rem;">
               ${icons.download}
-              <span>Baixar Certificado Oficial (PDF)</span>
+              <span>Baixar PDF</span>
             </a>
           </div>
         </div>
@@ -909,12 +809,12 @@ function setupClassroomControls() {
     } catch (err) {
       resultBox.style.display = "block";
       resultBox.innerHTML = `
-        <div style="background-color: var(--bg-surface); border: 1px solid var(--danger); border-radius: var(--radius-lg); padding: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+        <div style="background-color: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; display: flex; align-items: center; gap: 0.85rem;">
           <span style="color: var(--danger);">${icons.close}</span>
           <div>
-            <h4 style="font-size: 1rem; color: var(--danger); font-weight: 700;">Certificado Não Encontrado</h4>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.25rem;">
-              ${err.message || "O código informado não corresponde a nenhum registro válido na base de dados oficial."}
+            <h4 style="font-size: 0.95rem; color: var(--danger); font-weight: 600;">Certificado não encontrado</h4>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.2rem;">
+              ${err.message || "O código informado não corresponde a nenhum registro válido."}
             </p>
           </div>
         </div>
@@ -968,14 +868,14 @@ function updateClassroomCourseBadge() {
     container.innerHTML = `
       <span class="classroom-header-badge completed">
         ${icons.checkCircle}
-        <span>Curso 100% Concluído</span>
+        <span>Concluído</span>
       </span>
     `;
   } else if (state.currentEnrollment) {
     const percent = Math.round(state.currentEnrollment.progress_percent || 0);
     container.innerHTML = `
       <span class="classroom-header-badge in-progress">
-        <span>Em Andamento (${percent}%)</span>
+        <span>Em andamento (${percent}%)</span>
       </span>
     `;
   } else {
@@ -985,8 +885,7 @@ function updateClassroomCourseBadge() {
 
 function updateClassroomProgress() {
   const percent = state.currentEnrollment?.progress_percent !== null && state.currentEnrollment?.progress_percent !== undefined
-    ? Math.round(state.currentEnrollment.progress_percent)
-    : 0;
+    ? Math.round(state.currentEnrollment.progress_percent) : 0;
   const completedCount = state.currentLessons.filter((l) => l.is_completed).length;
   const totalCount = state.currentLessons.length;
 
@@ -994,7 +893,7 @@ function updateClassroomProgress() {
   const percentEl = document.getElementById("curriculum-percent-text");
   const fillEl = document.getElementById("curriculum-progress-fill");
 
-  if (textEl) textEl.textContent = `${completedCount} de ${totalCount} aulas concluídas`;
+  if (textEl) textEl.textContent = `${completedCount} de ${totalCount} aulas`;
   if (percentEl) percentEl.textContent = `${percent}%`;
   if (fillEl) fillEl.style.width = `${percent}%`;
 }
@@ -1004,7 +903,7 @@ function renderClassroomCurriculum() {
   if (!container) return;
 
   if (!state.currentLessons || state.currentLessons.length === 0) {
-    container.innerHTML = `<p style="padding: 1.25rem; color: var(--text-muted); font-size: 0.875rem;">Nenhuma aula cadastrada ainda.</p>`;
+    container.innerHTML = `<p style="padding: 1rem; color: var(--text-muted); font-size: 0.85rem;">Nenhuma aula cadastrada.</p>`;
     return;
   }
 
@@ -1016,25 +915,16 @@ function renderClassroomCurriculum() {
       let statusIcon = icons.circle;
       let statusClass = "";
 
-      if (isCompleted) {
-        statusIcon = icons.checkCircle;
-        statusClass = "completed";
-      } else if (isActive) {
-        statusIcon = icons.play;
-        statusClass = "playing";
-      }
+      if (isCompleted) { statusIcon = icons.checkCircle; statusClass = "completed"; }
+      else if (isActive) { statusIcon = icons.play; statusClass = "playing"; }
 
       const durationText = lesson.duration_seconds > 0 ? `${Math.round(lesson.duration_seconds / 60)} min` : "";
 
       return `
         <div class="curriculum-lesson-item ${isActive ? "active" : ""}" data-lesson-id="${lesson.id}">
           <div class="curriculum-lesson-info">
-            <span class="curriculum-status-icon ${statusClass}">
-              ${statusIcon}
-            </span>
-            <span class="curriculum-lesson-title">
-              ${lesson.order_index}. ${lesson.title}
-            </span>
+            <span class="curriculum-status-icon ${statusClass}">${statusIcon}</span>
+            <span class="curriculum-lesson-title">${lesson.order_index}. ${lesson.title}</span>
           </div>
           <span class="curriculum-lesson-duration">${durationText}</span>
         </div>
@@ -1057,9 +947,8 @@ function selectLesson(lesson) {
   document.getElementById("breadcrumb-lesson-title").textContent = `Aula ${lesson.order_index}: ${lesson.title}`;
   document.getElementById("current-lesson-title").textContent = `${lesson.order_index}. ${lesson.title}`;
   document.getElementById("current-lesson-desc").textContent =
-    `Você está assistindo à aula "${lesson.title}". Acompanhe a reprodução do vídeo e os materiais didáticos disponibilizados na aba ao lado para consolidar seu aprendizado.`;
+    `Você está assistindo à aula "${lesson.title}". Acompanhe o vídeo e os materiais disponíveis.`;
 
-  // Carrega vídeo no player
   if (lesson.video_filename) {
     state.player.loadSource(`/api/lessons/${lesson.id}/video`);
   } else {
@@ -1100,7 +989,7 @@ async function loadLessonMaterials(lessonId) {
   try {
     const data = await api.lessons.listMaterials(lessonId);
     if (!data.materials || data.materials.length === 0) {
-      container.innerHTML = `<span style="font-size: 0.875rem; color: var(--text-muted); padding: 0.5rem 0;">Nenhum material de apoio anexado a esta aula.</span>`;
+      container.innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted); padding: 0.5rem 0;">Nenhum material anexado.</span>`;
       return;
     }
 
@@ -1109,10 +998,10 @@ async function loadLessonMaterials(lessonId) {
         (m) => `
         <div class="material-card">
           <div class="material-info">
-            <span style="color: var(--primary);">${icons.fileText}</span>
+            <span style="color: var(--text-secondary);">${icons.fileText}</span>
             <span class="material-title">${m.title}</span>
           </div>
-          <a href="/api/materials/${m.id}/download" class="btn btn-secondary" style="padding: 0.3rem 0.65rem; font-size: 0.8rem;" download>
+          <a href="/api/materials/${m.id}/download" class="btn btn-secondary" style="padding: 0.28rem 0.55rem; font-size: 0.78rem;" download>
             ${icons.download}
             <span>Baixar</span>
           </a>
@@ -1121,7 +1010,7 @@ async function loadLessonMaterials(lessonId) {
       )
       .join("");
   } catch {
-    container.innerHTML = `<span style="font-size: 0.875rem; color: var(--danger);">Não foi possível carregar os anexos desta aula.</span>`;
+    container.innerHTML = `<span style="font-size: 0.85rem; color: var(--danger);">Não foi possível carregar os materiais.</span>`;
   }
 }
 
@@ -1134,22 +1023,17 @@ function updateCertificateStatus() {
   if (isCompleted) {
     if (certBtn) certBtn.style.display = "inline-flex";
     if (msgEl) {
-      msgEl.innerHTML = `<strong>Parabéns!</strong> Você concluiu 100% da carga horária deste curso. Seu certificado oficial já está pronto para emissão e download.`;
+      msgEl.innerHTML = `<strong>Parabéns!</strong> Você concluiu 100% do curso. Emita seu certificado oficial.`;
     }
   } else {
     if (certBtn) certBtn.style.display = "none";
     if (msgEl) {
-      msgEl.textContent = `Para obter o certificado oficial em PDF com código de verificação criptográfica, você deve completar 100% das aulas desta capacitação (Progresso atual: ${Math.round(percent)}%).`;
+      msgEl.textContent = `Conclua 100% das aulas para obter o certificado. Progresso atual: ${Math.round(percent)}%.`;
     }
   }
 }
 
-// ==============================================================================
-// 7. Formulários de Modais (Criação de Curso pelo Admin)
-// ==============================================================================
-
 function setupForms() {
-  // Modal de Login secundário
   document.getElementById("form-login")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("login-email").value;
@@ -1158,7 +1042,7 @@ function setupForms() {
     try {
       const data = await api.auth.login({ email, password });
       state.user = data.user;
-      showToast(`Bem-vindo(a) ao EduCore, ${data.user.name}!`, "success");
+      showToast(`Bem-vindo(a), ${data.user.name}!`, "success");
       closeModal("modal-login");
       renderNavActions();
       updateAdminUI();
@@ -1171,7 +1055,6 @@ function setupForms() {
     }
   });
 
-  // Modal de Cadastro secundário
   document.getElementById("form-register")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("reg-name").value;
@@ -1181,7 +1064,7 @@ function setupForms() {
 
     try {
       await api.auth.register({ name, email, password, role });
-      showToast("Cadastro realizado com sucesso! Faça login para continuar.", "success");
+      showToast("Cadastro realizado! Faça login para continuar.", "success");
       closeModal("modal-register");
       openModal("modal-login");
     } catch (err) {
@@ -1189,7 +1072,6 @@ function setupForms() {
     }
   });
 
-  // Criar Curso (Admin)
   document.getElementById("form-create-course")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("course-title").value;
@@ -1198,7 +1080,7 @@ function setupForms() {
 
     try {
       await api.courses.create({ title, description, workloadHours });
-      showToast("Programa de capacitação registrado com sucesso!", "success");
+      showToast("Curso criado com sucesso!", "success");
       closeModal("modal-create-course");
       document.getElementById("form-create-course").reset();
       await loadCourses();
@@ -1208,5 +1090,4 @@ function setupForms() {
   });
 }
 
-// Inicia aplicação
 window.addEventListener("DOMContentLoaded", init);

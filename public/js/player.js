@@ -46,10 +46,7 @@ export class CustomVideoPlayer {
   initEvents() {
     if (!this.video) return;
 
-    // Play / Pause
-    if (this.playBtn) {
-      this.playBtn.addEventListener("click", () => this.togglePlay());
-    }
+    if (this.playBtn) this.playBtn.addEventListener("click", () => this.togglePlay());
     this.video.addEventListener("click", () => this.togglePlay());
 
     this.video.addEventListener("play", () => {
@@ -62,7 +59,6 @@ export class CustomVideoPlayer {
       this.showControls();
     });
 
-    // Avanço e Recuo de 10 segundos
     if (this.replay10Btn) {
       this.replay10Btn.addEventListener("click", () => {
         this.video.currentTime = Math.max(0, this.video.currentTime - 10);
@@ -77,10 +73,7 @@ export class CustomVideoPlayer {
       });
     }
 
-    // Volume & Mute
-    if (this.volumeBtn) {
-      this.volumeBtn.addEventListener("click", () => this.toggleMute());
-    }
+    if (this.volumeBtn) this.volumeBtn.addEventListener("click", () => this.toggleMute());
 
     if (this.volumeSlider) {
       this.volumeSlider.addEventListener("input", (e) => {
@@ -91,13 +84,10 @@ export class CustomVideoPlayer {
       });
     }
 
-    // Atualização de tempo e scrubber
     this.video.addEventListener("timeupdate", () => {
       if (!this.video.duration) return;
       const percent = (this.video.currentTime / this.video.duration) * 100;
-      if (this.scrubberFill) {
-        this.scrubberFill.style.width = `${percent}%`;
-      }
+      if (this.scrubberFill) this.scrubberFill.style.width = `${percent}%`;
       if (this.timeDisplay) {
         this.timeDisplay.textContent = `${formatTime(this.video.currentTime)} / ${formatTime(this.video.duration)}`;
       }
@@ -109,25 +99,20 @@ export class CustomVideoPlayer {
       }
     });
 
-    // Busca interativa na barra (Seek com Range requests HTTP 206)
     if (this.scrubberTrack) {
       this.scrubberTrack.addEventListener("click", (e) => {
         const rect = this.scrubberTrack.getBoundingClientRect();
         const pos = (e.clientX - rect.left) / rect.width;
-        if (this.video.duration) {
-          this.video.currentTime = pos * this.video.duration;
-        }
+        if (this.video.duration) this.video.currentTime = pos * this.video.duration;
       });
     }
 
-    // Velocidade de reprodução
     if (this.speedSelect) {
       this.speedSelect.addEventListener("change", (e) => {
         this.video.playbackRate = parseFloat(e.target.value);
       });
     }
 
-    // Tela Cheia
     if (this.fullscreenBtn) {
       this.fullscreenBtn.addEventListener("click", () => this.toggleFullscreen());
     }
@@ -139,95 +124,58 @@ export class CustomVideoPlayer {
       }
     });
 
-    // Auto-hide controls com movimento do mouse
     this.container.addEventListener("mousemove", () => {
       this.showControls();
       this.scheduleAutoHide();
     });
 
     this.container.addEventListener("mouseleave", () => {
-      if (!this.video.paused) {
-        this.hideControls();
-      }
+      if (!this.video.paused) this.hideControls();
     });
 
-    // Atalhos de Teclado no Player
     window.addEventListener("keydown", (e) => {
-      // Ignora atalhos se o usuário estiver digitando em inputs ou textareas
       if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
-
-      if (e.code === "Space") {
-        e.preventDefault();
-        this.togglePlay();
-      } else if (e.code === "ArrowLeft") {
-        e.preventDefault();
-        this.video.currentTime = Math.max(0, this.video.currentTime - 5);
-      } else if (e.code === "ArrowRight") {
-        e.preventDefault();
-        if (this.video.duration) {
-          this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 5);
-        }
-      } else if (e.code === "KeyM") {
-        e.preventDefault();
-        this.toggleMute();
-      } else if (e.code === "KeyF") {
-        e.preventDefault();
-        this.toggleFullscreen();
-      }
+      if (e.code === "Space") { e.preventDefault(); this.togglePlay(); }
+      else if (e.code === "ArrowLeft") { e.preventDefault(); this.video.currentTime = Math.max(0, this.video.currentTime - 5); }
+      else if (e.code === "ArrowRight") { e.preventDefault(); if (this.video.duration) this.video.currentTime = Math.min(this.video.duration, this.video.currentTime + 5); }
+      else if (e.code === "KeyM") { e.preventDefault(); this.toggleMute(); }
+      else if (e.code === "KeyF") { e.preventDefault(); this.toggleFullscreen(); }
     });
   }
 
   togglePlay() {
-    if (this.video.paused) {
-      this.video.play().catch(() => {});
-    } else {
-      this.video.pause();
-    }
+    if (this.video.paused) this.video.play().catch(() => {});
+    else this.video.pause();
   }
 
   toggleMute() {
     this.video.muted = !this.video.muted;
-    if (this.volumeSlider) {
-      this.volumeSlider.value = this.video.muted ? 0 : this.video.volume;
-    }
+    if (this.volumeSlider) this.volumeSlider.value = this.video.muted ? 0 : this.video.volume;
     this.updateVolumeIcon();
   }
 
   updateVolumeIcon() {
     if (!this.volumeIcon) return;
-    if (this.video.muted || this.video.volume === 0) {
-      this.volumeIcon.innerHTML = icons.volumeMute;
-    } else {
-      this.volumeIcon.innerHTML = icons.volume;
-    }
+    this.volumeIcon.innerHTML = (this.video.muted || this.video.volume === 0) ? icons.volumeMute : icons.volume;
   }
 
   toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      this.container.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
+    if (!document.fullscreenElement) this.container.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
   }
 
   showControls() {
-    if (this.controls) {
-      this.controls.classList.remove("fade-out");
-    }
+    if (this.controls) this.controls.classList.remove("fade-out");
   }
 
   hideControls() {
-    if (this.controls) {
-      this.controls.classList.add("fade-out");
-    }
+    if (this.controls) this.controls.classList.add("fade-out");
   }
 
   scheduleAutoHide() {
     clearTimeout(this.hideTimeout);
     if (!this.video.paused) {
-      this.hideTimeout = setTimeout(() => {
-        this.hideControls();
-      }, 2500);
+      this.hideTimeout = setTimeout(() => this.hideControls(), 2500);
     }
   }
 
