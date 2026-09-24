@@ -36,5 +36,6 @@ registerCertificatesRoutes(router);
 const server = createAppServer(router);
 
 server.listen(PORT, HOST, () => {
-  console.log(`🚀 [EduCore] Servidor rodando com sucesso em http://${HOST}:${PORT}`);
+  const displayHost = HOST === "0.0.0.0" ? "localhost" : HOST;
+  console.log(`🚀 [EduCore] Servidor rodando em http://${displayHost}:${PORT}`);
 });
